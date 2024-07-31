@@ -1,0 +1,17 @@
+LOG_LEVEL: INFO
+
+# ######################################################################################################
+# # https://docs.sqlalchemy.org/en/13/core/engines.html
+DATABASE:
+  DRIVER: mysql
+  NAME: thcloud
+  HOST: 127.0.0.1
+  PORT: 3306
+  USERNAME: root
+  PASSWORD: root
+  QUERY:
+    charset: utf8mb4
+
+
+HOST: 0.0.0.0
+PORT: 8000

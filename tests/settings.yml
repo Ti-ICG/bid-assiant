@@ -1,0 +1,15 @@
+DEBUG: false
+LOG_LEVEL: INFO
+
+HOST: 127.0.0.1
+PORT: 8000
+
+DATABASE:
+  DRIVER: mysql
+  NAME: bid_assiant
+  HOST: 127.0.0.1
+  PORT: 3306
+  USERNAME: root
+  PASSWORD: root
+  QUERY:
+    charset: utf8mb4

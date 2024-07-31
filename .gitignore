@@ -211,3 +211,4 @@ Temporary Items
 
 .vscode
 .idea
+/src/thcloud/config/settings.local.yml

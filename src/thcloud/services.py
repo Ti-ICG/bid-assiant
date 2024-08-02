@@ -1,10 +1,31 @@
 """Service"""
+
 from typing import Generic, List
 
 from sqlalchemy.orm import Session
 
-from thcloud.dao import ArticleDAO, BaseDAO
-from thcloud.models import Article
+from thcloud.dao import (
+    BaseDAO,
+    BidCatalogContentDAO,
+    BidCatalogDAO,
+    RequirementAnalysisDAO,
+    RequirementAnalysisDetailDAO,
+    ResponseIndicatorDAO,
+    ResponseIndicatorDetailDAO,
+    SchemeDAO,
+    SystemFrameworkDAO,
+)
+from thcloud.models import (
+    Bid_catalog,
+    Bid_catalog_content,
+    Requirement_analysis,
+    Requirement_analysis_detail,
+    Response_indicator,
+    Response_indicator_detail,
+    Scheme,
+    System_framework,
+    System_framework_detail,
+)
 from thcloud.schemas import CreateSchema, ModelType, UpdateSchema
 
 
@@ -35,5 +56,47 @@ class BaseService(Generic[ModelType, CreateSchema, UpdateSchema]):
         return self.dao.delete(session, pk)
 
 
-class ArticleService(BaseService[Article, CreateSchema, UpdateSchema]):
-    dao = ArticleDAO()
+class SchemeService(BaseService[Scheme, CreateSchema, UpdateSchema]):
+    dao = SchemeDAO()
+
+
+class RequirementAnalysisService(
+    BaseService[Requirement_analysis, CreateSchema, UpdateSchema]
+):
+    dao = RequirementAnalysisDAO()
+
+
+class RequirementAnalysisDetailService(
+    BaseService[Requirement_analysis_detail, CreateSchema, UpdateSchema]
+):
+    dao = RequirementAnalysisDetailDAO()
+
+
+class SystemFrameworkService(BaseService[System_framework, CreateSchema, UpdateSchema]):
+    dao = SystemFrameworkDAO()
+
+
+# class SystemFrameworkDetailService(BaseService[System_framework_detail, CreateSchema, UpdateSchema]):
+#     dao = SystemFrameworkDetailDAO()
+
+
+class ResponseIndicatorService(
+    BaseService[Response_indicator, CreateSchema, UpdateSchema]
+):
+    dao = ResponseIndicatorDAO()
+
+
+class ResponseIndicatorDetailService(
+    BaseService[Response_indicator_detail, CreateSchema, UpdateSchema]
+):
+    dao = ResponseIndicatorDetailDAO()
+
+
+class BidCatalogService(BaseService[Bid_catalog, CreateSchema, UpdateSchema]):
+    dao = BidCatalogDAO()
+
+
+class BidCatalogContentService(
+    BaseService[Bid_catalog_content, CreateSchema, UpdateSchema]
+):
+    dao = BidCatalogContentDAO()

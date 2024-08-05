@@ -117,20 +117,25 @@ class UpdateSystemFramework(BaseSystemFramework):
     tmp_framework_content: str  # 临时框架内容（草稿）
 
 
-# #  System_framework_detail
-# class BaseSystemFrameworkDetail(BaseModel):
-#     system_framework_id: int
+#  System_framework_detail
+class BaseSystemFrameworkDetail(BaseModel):
+    system_framework_id: int
+    parent_id: int
+    content: str
+    level: int
 
 
-# class SystemFrameworkSchemasDetail(BaseSystemFrameworkDetail,InDBMixin):
-#     create_time: datetime
-#     update_time: datetime
+class SystemFrameworkDetailSchemas(BaseSystemFrameworkDetail, InDBMixin):
+    create_time: datetime
+    update_time: datetime
 
-# class  CreateSystemFrameworkDetail(BaseSystemFrameworkDetail):
-#     pass
 
-# class  UpdateSystemFrameworkDetail(BaseSystemFrameworkDetail):
-#     pass
+class CreateSystemFrameworkDetail(BaseSystemFrameworkDetail):
+    pass
+
+
+class UpdateSystemFrameworkDetail(BaseSystemFrameworkDetail):
+    pass
 
 
 #  Response_indicator

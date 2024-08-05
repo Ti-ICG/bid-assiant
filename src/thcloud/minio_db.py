@@ -1,3 +1,5 @@
+from datetime import timedelta
+import io
 from minio import Minio, InvalidResponseError, S3Error
 from thcloud.config import settings
 
@@ -66,26 +68,47 @@ class Bucket:
         except S3Error as err:
             print("upload_failed:", err)
 
-    def get_file_from_bucket(self, bucket_name, minio_file_path):
+    def upload_object(
+        self, bucket_name, file_name, file_data, content_type="binary/octet-stream"
+    ):
         """
-        从bucket获取文件
-        :param bucket_name: minio桶名称
-        :param minio_file_path: 存放在minio桶中文件名字
-                            file_name处可以包含目录(文件夹) 例如 /example/file_name
+        上传文件 + 写入  (不保存到本地)
+        :param bucket_name: 桶名
+        :param file: 文件名
+        :param file_data: bytes
+        :param content_type: 文件类型 默认是appliction/octet-stream
+        :return:
         """
-        # 桶是否存在
-        check_bucket = self.minioClient.bucket_exists(bucket_name)
-        if check_bucket:
-            try:
-                response = self.minioClient.get_object(
-                    bucket_name=bucket_name,
-                    object_name=minio_file_path,
-                )
-                return response
-            except FileNotFoundError as err:
-                print("get_failed: " + str(err))
-            except S3Error as err:
-                print("get_failed:", err)
+        try:
+            # Make bucket if not exist.
+            found = self.minioClient.bucket_exists(bucket_name)
+            if not found:
+                print("Bucket '{}' is not exists".format(bucket_name))
+                self.minioClient.make_bucket(bucket_name)
+
+            buffer = io.BytesIO(file_data)
+            st_size = len(file_data)
+            self.minioClient.put_object(
+                bucket_name, file_name, buffer, st_size, content_type=content_type
+            )
+        except S3Error as e:
+            print("[error]:", e)
+
+    def get_file_object(self, bucket_name, object_name):
+        """
+        获取文件对象    直接获取，不在本地存储
+        :param bucket_name:
+        :param file:
+        :return:  obj
+        """
+        try:
+            obj = self.minioClient.get_object(
+                bucket_name=bucket_name, object_name=object_name
+            )
+            return obj
+
+        except Exception as e:
+            print("=============", e)
 
     def download_file_from_bucket(
         self, bucket_name, minio_file_path, download_file_path
@@ -165,6 +188,15 @@ class Bucket:
                 ret.append(_.object_name)
             return ret
 
+    def presigned_get_file(self, bucket_name, file_name, days=7):
+        """
+        生成一个http GET操作 签证URL
+        :return:
+        """
+        return self.minioClient.presigned_get_object(
+            bucket_name, file_name, expires=timedelta(days=days)
+        )
+
 
 # 本地minio登录IP地址和账号密码
 bucket = Bucket(
@@ -175,6 +207,7 @@ bucket = Bucket(
 # 创建桶测试
 # bucket.create_one_bucket("bidcatalog")
 # bucket.create_one_bucket("bidfile")
+print(bucket.presigned_get_file("bidfile", "音频证伪技术调研.docx"))
 
 # 删除桶测试
 # bucket.remove_one_bucket("bidassistant")

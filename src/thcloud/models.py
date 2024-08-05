@@ -147,6 +147,9 @@ class System_framework_detail(BaseModel):
     system_framework_id = Column(
         Integer, ForeignKey("system_framework.id")
     )  # 所属系统框架id
+    parent_id = Column(Integer, nullable=True)  # 父节点id
+    content = Column(String(100), nullable=False)  # 框架详细内容
+    level = Column(Integer, nullable=False)  # 框架层级
     create_time = Column(DateTime, default=datetime.now, nullable=False)
     update_time = Column(
         DateTime, default=datetime.now, onupdate=datetime.now, nullable=False

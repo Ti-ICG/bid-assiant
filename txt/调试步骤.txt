@@ -1,0 +1,47 @@
+vscode 断点调试方式 
+
+1.thcloud/cmdline.py 添加debugger 命令 并安装 poetry install debugpy 包
+
+	@main.command()
+	@click.option('-h', '--host', show_default=True, help=f'Host IP. Default: {settings.HOST}')
+	@click.option('-p', '--port', show_default=True, type=int, help=f'Port. Default: {settings.PORT}')
+	@click.option('--level', help='Log level')
+	def debug(host, port, level):
+		"""Start server in debug mode."""
+		import debugpy
+		debugpy.listen(address=('0.0.0.0', 5678))
+		click.echo("Debugger is attached, you can now connect to the process using VS Code.")
+		
+		kwargs = {
+			'LOGLEVEL': level,
+			'HOST': host,
+			'PORT': port,
+		}
+		for name, value in kwargs.items():
+			if value:
+				settings.set(name, value)
+
+		Server().run()
+		
+		
+2. 配置vscode的 调试配置在.vscode/launch.json 添加代码
+	"configurations": [
+			{
+				"name": "Python: Remote Attach",
+				"type": "python",
+				"request": "attach",
+				"connect": {
+					"host": "localhost",
+					"port": 5678
+				},
+				"pathMappings": [
+					{
+						"localRoot": "${workspaceFolder}",
+						"remoteRoot": "."
+					}
+				]
+			}
+		]
+
+3.先用 bid_assiant debug 启动服务器，再点击vsode的调试按钮，或者按F5链接调试
+4.此时恭喜你可以使用断点调试招标助手了

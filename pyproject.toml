@@ -18,6 +18,8 @@ toml = "^0.10.2"
 pytest = "^8.3.2"
 isort = "^5.13.2"
 pymysql = "^1.1.1"
+debugpy = "^1.8.2"
+elasticsearch = "7.13"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
@@ -37,3 +39,8 @@ bid_assiant = "thcloud.cmdline:main"
 name = "tsinghua-pypi"
 url = "https://pypi.tuna.tsinghua.edu.cn/simple"
 default = true
+
+[[tool.poetry.packages]]
+# 指定包含的包
+include = "thcloud"
+from = "src"

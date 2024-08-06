@@ -224,9 +224,14 @@ def insert_table(list, min, max, heading, bid_path, output_path):
 
 
 #预处理文档，拿来即用
-def preprocess_docx(bid_path,out_path,confidence,Match_text,):
+def preprocess_docx(bid_path, out_path, confidence, Match_text, ):
+    headings = list_headings(bid_path)
+    print(headings)
+    compute_s = compute_similarity(Match_text, heading2vec(headings))
+    print(compute_s)
+    check_s = check_similarity(compute_s, confidence)
+    heading = print_heading(check_s, headings)
 
-    heading = print_heading(check_similarity(compute_similarity(Match_text, heading2vec(list_headings(bid_path))), confidence), list_headings(bid_path))
     for i in range(len(heading)):
         min, max = find_heading_range(bid_path, heading[i])
         list = get_table_paragraph_positions(bid_path)

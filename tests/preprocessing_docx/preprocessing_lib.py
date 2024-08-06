@@ -6,7 +6,6 @@ import os
 import docx
 from docx import Document
 
-
 tokenizer = BertTokenizer.from_pretrained(
     'shibing624/text2vec-bge-large-chinese')  # shibing624/text2vec-bge-large-chinese     shibing624/text2vec-base-chinese   sentence-transformers/all-MiniLM-L6-v2   # model_max_length=xxx
 model = BertModel.from_pretrained(

@@ -24,6 +24,7 @@ from thcloud.schemas import (
     CreateSchema,
     CreateScheme,
     CreateSystemFramework,
+    CreateSystemFrameworkDetail,
     ModelType,
     UpdateBidCatalog,
     UpdateBidCatalogContent,
@@ -34,6 +35,7 @@ from thcloud.schemas import (
     UpdateSchema,
     UpdateScheme,
     UpdateSystemFramework,
+    UpdateSystemFrameworkDetail,
 )
 
 
@@ -111,8 +113,8 @@ class SystemFrameworkDAO(
     model = System_framework
 
 
-# class SystemFrameworkDetailDAO(BaseDAO[System_framework_detail,CreateSystemFrameworkDetail,UpdateSystemFrameworkDetail]):
-#     model = System_framework_detail
+class SystemFrameworkDetailDAO(BaseDAO[System_framework_detail,CreateSystemFrameworkDetail,UpdateSystemFrameworkDetail]):
+    model = System_framework_detail
 
 
 class ResponseIndicatorDAO(

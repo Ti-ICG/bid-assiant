@@ -14,6 +14,7 @@ from thcloud.dao import (
     ResponseIndicatorDetailDAO,
     SchemeDAO,
     SystemFrameworkDAO,
+    SystemFrameworkDetailDAO,
 )
 from thcloud.models import (
     Bid_catalog,
@@ -76,8 +77,8 @@ class SystemFrameworkService(BaseService[System_framework, CreateSchema, UpdateS
     dao = SystemFrameworkDAO()
 
 
-# class SystemFrameworkDetailService(BaseService[System_framework_detail, CreateSchema, UpdateSchema]):
-#     dao = SystemFrameworkDetailDAO()
+class SystemFrameworkDetailService(BaseService[System_framework_detail, CreateSchema, UpdateSchema]):
+    dao = SystemFrameworkDetailDAO()
 
 
 class ResponseIndicatorService(

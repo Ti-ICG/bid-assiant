@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 from starlette.responses import StreamingResponse
 
+from tests.preprocessing_docx import preprocessing_lib
 from thcloud.minio_db import bucket
 from thcloud.config import settings
 from thcloud.dependencies import CommonQueryParams, get_db
@@ -21,11 +22,13 @@ from thcloud.schemas import (
     CreateResponseIndicatorDetail,
     CreateScheme,
     CreateSystemFramework,
+    CreateSystemFrameworkDetail,
     RequirementAnalysisDetailSchemas,
     RequirementAnalysisSchemas,
     ResponseIndicatorDetailSchemas,
     ResponseIndicatorSchemas,
     SchemeSchemas,
+    SystemFrameworkDetailSchemas,
     SystemFrameworkSchemas,
     UpdateBidCatalog,
     UpdateBidCatalogContent,
@@ -37,6 +40,7 @@ from thcloud.schemas import (
     UpdateSystemFramework,
     FileChat,
     ChatChat,
+    UpdateSystemFrameworkDetail,
 )
 from thcloud.services import (
     BidCatalogContentService,
@@ -46,6 +50,7 @@ from thcloud.services import (
     ResponseIndicatorDetailService,
     ResponseIndicatorService,
     SchemeService,
+    SystemFrameworkDetailService,
     SystemFrameworkService,
 )
 
@@ -65,15 +70,6 @@ def get_by_id(pk: int, session: Session = Depends(get_db)):
     return scheme_service.get_by_id(session, pk)
 
 
-# @router.post("/schemes", response_model=SchemeSchemas, tags=["Scheme"])
-# def create(
-#     obj_in: CreateScheme,
-#     session: Session = Depends(get_db),
-# ):
-
-#     return scheme_service.create(session, obj_in)
-
-
 # 上传文件并存储在Minio
 @router.post("/schemes", response_model=SchemeSchemas, tags=["Scheme"])
 async def create(
@@ -82,25 +78,11 @@ async def create(
     bidfile: UploadFile = File(...),
     session: Session = Depends(get_db),
 ):
-
-    contents1 = await catalog.read()
-    contents2 = await bidfile.read()
-    # 使用with open打开目标文件
-    with open("file/catalog" + catalog.filename, "wb") as f:
-        # 2.3 将获取的fileb文件内容，写入到新文件中
-        f.write(contents1)
-
-    with open("file/bid" + bidfile.filename, "wb") as f1:
-        # 2.3 将获取的fileb文件内容，写入到新文件中
-        f1.write(contents2)
-
-    bucket.upload_file_to_bucket(
-        "bidcatalog", catalog.filename, "file/catalog" + catalog.filename
-    )
-
-    bucket.upload_file_to_bucket(
-        "bidfile", bidfile.filename, "file/bid" + bidfile.filename
-    )
+    # 读取文件  返回bytes
+    catalog_contents = await catalog.read()
+    bidfile_contents = await bidfile.read()
+    bucket.upload_object("bidcatalog", catalog.filename, catalog_contents)
+    bucket.upload_object("bidfile", bidfile.filename, bidfile_contents)
     url = "http://" + settings.MINIO.ADDRESS
     createScheme = CreateScheme(
         scheme_name=scheme_name,
@@ -108,14 +90,20 @@ async def create(
         file_path_url=url + "/bidfile/" + bidfile.filename,
     )
 
+    # 调用需求解析接口
+    # confidence = 0.65
+    # match_text = "技术内容"
+    # file_list = preprocessing_lib.preprocess_docx(bidfile,confidence,match_text)
+
     return scheme_service.create(session, createScheme)
 
 
 # 从Minio中获取文件
-@router.get("/schemes/download", tags=["Scheme"])
+@router.get("/schemes/download/", tags=["Scheme"])
 def download(bucket_name: str, filename: str):
-    response = bucket.get_file_from_bucket(bucket_name, filename)
-    return response
+    # 获取下载url
+    url = bucket.presigned_get_file(bucket_name, filename)
+    return {"url": url}
 
 
 @router.patch("/schemes/{pk}", response_model=SchemeSchemas, tags=["Scheme"])
@@ -261,44 +249,44 @@ def delete(pk: int, session: Session = Depends(get_db)):
 
 
 # ----------------------------------------system_framework-----------------------------
-# system_framework_detail_service = SystemFrameworkDetailService()
-# @router.get('/system_framework_detail', tags=['system_framework_detail'])
-# def get(
-#         session: Session = Depends(get_db),
-#         commons: CommonQueryParams = Depends()
-# ):
-#     return system_framework_detail_service.get(session, offset=commons.offset, limit=commons.limit)
+system_framework_detail_service = SystemFrameworkDetailService()
+@router.get('/system_framework_detail', tags=['system_framework_detail'])
+def get(
+        session: Session = Depends(get_db),
+        commons: CommonQueryParams = Depends()
+):
+    return system_framework_detail_service.get(session, offset=commons.offset, limit=commons.limit)
 
-# @router.get('/system_framework_detail/{pk}', tags=['system_framework_detail'])
-# def get_by_id(
-#         pk: int,
-#         session: Session = Depends(get_db)
-# ):
-#     return system_framework_detail_service.get_by_id(session, pk)
+@router.get('/system_framework_detail/{pk}', tags=['system_framework_detail'])
+def get_by_id(
+        pk: int,
+        session: Session = Depends(get_db)
+):
+    return system_framework_detail_service.get_by_id(session, pk)
 
-# @router.post('/system_framework_detail', response_model=SystemFrameworkDetailSchemas,
-# tags=['system_framework_detail'])
-# def create(
-#         obj_in: CreateSystemFrameworkDetail,
-#         session: Session = Depends(get_db),
-# ):
-#     return system_framework_detail_service.create(session, obj_in)
+@router.post('/system_framework_detail', response_model=SystemFrameworkDetailSchemas,
+tags=['system_framework_detail'])
+def create(
+        obj_in: CreateSystemFrameworkDetail,
+        session: Session = Depends(get_db),
+):
+    return system_framework_detail_service.create(session, obj_in)
 
-# @router.patch('/system_framework_detail/{pk}', response_model=SystemFrameworkDetailSchemas,
-# tags=['system_framework_detail'])
-# def patch(
-#         pk: int,
-#         obj_in: UpdateSystemFrameworkDetail,
-#         session: Session = Depends(get_db)
-# ):
-#     return system_framework_detail_service.patch(session, pk, obj_in)
+@router.patch('/system_framework_detail/{pk}', response_model=SystemFrameworkDetailSchemas,
+tags=['system_framework_detail'])
+def patch(
+        pk: int,
+        obj_in: UpdateSystemFrameworkDetail,
+        session: Session = Depends(get_db)
+):
+    return system_framework_detail_service.patch(session, pk, obj_in)
 
-# @router.delete('/system_framework_detail/{pk}',tags=['system_framework_detail'])
-# def delete(
-#         pk: int,
-#         session: Session = Depends(get_db)
-# ):
-#     return system_framework_detail_service.delete(session, pk)
+@router.delete('/system_framework_detail/{pk}',tags=['system_framework_detail'])
+def delete(
+        pk: int,
+        session: Session = Depends(get_db)
+):
+    return system_framework_detail_service.delete(session, pk)
 
 
 # ----------------------------------------Response_indicator------------------------------------

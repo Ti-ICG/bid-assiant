@@ -517,7 +517,6 @@ def kb_create(kb_name: str) -> bool:
     }
     with httpx.Client() as client:
         response = client.post(KB_CREATE_API, json=data)
-        print(response)
     if response.status_code == 200:
         return True
     return False
@@ -542,7 +541,7 @@ async def kb_upload_docs(kb_name: str, docs_path: str) -> bool:
                     files_to_upload.append(("file", file))
         if files_to_upload:
             response = await client.post(KB_UPLOAD_DOCS_API, data=data, files=files_to_upload)
-            print(response)
+            print(response.json())
             if response.status_code == 200 and response.json()["data"]["failed_files"].length == 0:
                 return True
     return False

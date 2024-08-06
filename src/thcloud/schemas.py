@@ -217,3 +217,12 @@ class CreateBidCatalogContent(BaseBidCatalogContent):
 
 class UpdateBidCatalogContent(BaseBidCatalogContent):
     pass
+
+
+#  Chat
+class KbChat(BaseModel):
+    query: str
+
+
+class ChatChat(BaseModel):
+    content: str

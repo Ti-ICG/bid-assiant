@@ -207,7 +207,7 @@ bucket = Bucket(
 # 创建桶测试
 # bucket.create_one_bucket("bidcatalog")
 # bucket.create_one_bucket("bidfile")
-print(bucket.presigned_get_file("bidfile", "音频证伪技术调研.docx"))
+# print(bucket.presigned_get_file("bidfile", "音频证伪技术调研.docx"))
 
 # 删除桶测试
 # bucket.remove_one_bucket("bidassistant")

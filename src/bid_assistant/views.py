@@ -1,6 +1,11 @@
 import os
+from typing import List
+
+import httpx
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
+from starlette.responses import StreamingResponse
+
 from thcloud.minio_db import bucket
 from thcloud.config import settings
 from thcloud.dependencies import CommonQueryParams, get_db
@@ -30,6 +35,8 @@ from thcloud.schemas import (
     UpdateResponseIndicatorDetail,
     UpdateScheme,
     UpdateSystemFramework,
+    FileChat,
+    ChatChat,
 )
 from thcloud.services import (
     BidCatalogContentService,
@@ -464,3 +471,98 @@ def patch(pk: int, obj_in: UpdateBidCatalogContent, session: Session = Depends(g
 @router.delete("/bid_catalog_content/{pk}", tags=["bid_catalog_content"])
 def delete(pk: int, session: Session = Depends(get_db)):
     return bid_catalog_content_service.delete(session, pk)
+
+# ----------------------------------------Chat-----------------
+CHAT_HOST = "http://192.168.200.17:7861"
+KB_CREATE_API = CHAT_HOST + "/knowledge_base/create_knowledge_base"
+KB_CREATE_DATA = {
+    "knowledge_base_name": "$knowledge_base_name",
+    "vector_store_type": "faiss",
+    "kb_info": "",
+    "embed_model": "bge-large-zh-v1.5"
+}
+
+
+KB_UPLOAD_DOCS_API = CHAT_HOST + "/knowledge_base/upload_docs"
+KB_UPLOAD_DOCS_DATA = {
+    "knowledge_base_name": "$knowledge_base_name",
+    "override": True,
+    "to_vector_store": True,
+    "chunk_size": 750,
+    "chunk_overlap": 150,
+    "zh_title_enhance": False,
+    "not_refresh_vs_cache": False
+}
+
+
+KB_CHAT_API = CHAT_HOST + "/chat/kb_chat"
+KB_CHAT_DATA = {
+    "query": "$query",
+    "mode": "local_kb",
+    "kb_name": "$knowledge_base_name",
+    "top_k": 3,
+    "score_threshold": 2,
+    "history": [],
+    "stream": True,
+    "model": "glm-4-9b-chat-1m",
+    "temperature": 0.7,
+    "max_tokens": 30000,
+    "prompt_name": "default",
+    "return_direct": False
+}
+
+CHAT_CHAT_API = CHAT_HOST + "/chat/chat/completions"
+CHAT_CHAT_DATA = {
+    "messages": [
+        {
+            "content": "你是谁",
+            "role": "system",
+            "name": "string",
+        }
+    ],
+    "model": "glm-4-9b-chat-1m",
+    "max_tokens": 2048,
+    "n": 0,
+    "stream": True,
+    "temperature": 0.7,
+}
+
+
+def kb_create(kb_name: str) -> bool:
+    data = KB_CREATE_DATA
+    data["knowledge_base_name"] = kb_name
+    with httpx.Client() as client:
+        response = client.post(KB_CREATE_API, json=data)
+        print(response)
+    if response.status_code == 200:
+        return True
+    return False
+
+
+def kb_upload_docks(files) -> bool:
+    with httpx.Client() as client:
+        response = client.post(KB_UPLOAD_DOCS_API, data=KB_UPLOAD_DOCS_DATA, files=files)
+        print(response)
+    if response.status_code == 200 and response.json()["data"]["failed_files"].length == 0:
+        return True
+    return False
+
+
+@router.post("/chat/file-chat")
+async def chat_file(req: FileChat):
+    async def generate():
+        async with httpx.AsyncClient() as client:
+            async with client.stream("POST", KB_CHAT_API, json=KB_CHAT_DATA) as stream:
+                async for chunk in stream.aiter_text():
+                    yield chunk
+    return StreamingResponse(generate(), media_type="text/event-stream")
+
+
+@router.post("/chat/chat")
+async def chat_chat(req: ChatChat):
+    async def generate():
+        async with httpx.AsyncClient() as client:
+            async with client.stream("POST", CHAT_CHAT_API, json=CHAT_CHAT_DATA) as stream:
+                async for chunk in stream.aiter_text():
+                    yield chunk
+    return StreamingResponse(generate(), media_type="text/event-stream")

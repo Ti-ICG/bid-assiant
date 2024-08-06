@@ -212,3 +212,13 @@ class CreateBidCatalogContent(BaseBidCatalogContent):
 
 class UpdateBidCatalogContent(BaseBidCatalogContent):
     pass
+
+
+#  Chat
+class FileChat(BaseModel):
+    knowledge_id: str
+    query: str
+
+
+class ChatChat(BaseModel):
+    content: str

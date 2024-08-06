@@ -6,11 +6,11 @@ import os
 import docx
 from docx import Document
 
+
 tokenizer = BertTokenizer.from_pretrained(
     'shibing624/text2vec-bge-large-chinese')  # shibing624/text2vec-bge-large-chinese     shibing624/text2vec-base-chinese   sentence-transformers/all-MiniLM-L6-v2   # model_max_length=xxx
 model = BertModel.from_pretrained(
     'shibing624/text2vec-bge-large-chinese')  # 效果                  >            效果                   >
-
 
 # Mean Pooling - Take attention mask into account for correct averaging
 def mean_pooling(model_output, attention_mask):

@@ -220,8 +220,7 @@ class UpdateBidCatalogContent(BaseBidCatalogContent):
 
 
 #  Chat
-class FileChat(BaseModel):
-    knowledge_id: str
+class KbChat(BaseModel):
     query: str
 
 

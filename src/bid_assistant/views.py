@@ -1,5 +1,4 @@
 import os
-from typing import List
 
 import httpx
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
@@ -7,9 +6,9 @@ from sqlalchemy.orm import Session
 from starlette.responses import StreamingResponse
 
 from tests.preprocessing_docx import preprocessing_lib
-from thcloud.minio_db import bucket
 from thcloud.config import settings
 from thcloud.dependencies import CommonQueryParams, get_db
+from thcloud.minio_db import bucket
 from thcloud.models import Bid_catalog
 from thcloud.schemas import (
     BidCatalogContentSchemas,
@@ -38,9 +37,9 @@ from thcloud.schemas import (
     UpdateResponseIndicatorDetail,
     UpdateScheme,
     UpdateSystemFramework,
-    FileChat,
-    ChatChat,
     UpdateSystemFrameworkDetail,
+    KbChat,
+    ChatChat,
 )
 from thcloud.services import (
     BidCatalogContentService,
@@ -90,12 +89,24 @@ async def create(
         file_path_url=url + "/bidfile/" + bidfile.filename,
     )
 
-    # 调用需求解析接口
-    # confidence = 0.65
-    # match_text = "技术内容"
-    # file_list = preprocessing_lib.preprocess_docx(bidfile,confidence,match_text)
+    scheme = scheme_service.create(session, createScheme)
 
-    return scheme_service.create(session, createScheme)
+    # 调用需求解析接口
+    confidence = 0.65
+    match_text = "技术内容"
+    bid_path = f".tmp/{scheme.id}/{bidfile.filename}"
+    os.makedirs(os.path.dirname(bid_path), exist_ok=True)
+    with open(bid_path, "wb") as file:
+        file.write(bidfile_contents)
+    out_path = f".tmp/{scheme.id}/out/"
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    preprocessing_lib.preprocess_docx(bid_path, out_path, confidence, match_text)
+
+    kb_name = f"bid-assistant/{scheme.id}"
+    kb_create(kb_name)
+    await kb_upload_docs(kb_name, out_path)
+
+    return scheme
 
 
 # 从Minio中获取文件
@@ -463,26 +474,7 @@ def delete(pk: int, session: Session = Depends(get_db)):
 # ----------------------------------------Chat-----------------
 CHAT_HOST = "http://192.168.200.17:7861"
 KB_CREATE_API = CHAT_HOST + "/knowledge_base/create_knowledge_base"
-KB_CREATE_DATA = {
-    "knowledge_base_name": "$knowledge_base_name",
-    "vector_store_type": "faiss",
-    "kb_info": "",
-    "embed_model": "bge-large-zh-v1.5"
-}
-
-
 KB_UPLOAD_DOCS_API = CHAT_HOST + "/knowledge_base/upload_docs"
-KB_UPLOAD_DOCS_DATA = {
-    "knowledge_base_name": "$knowledge_base_name",
-    "override": True,
-    "to_vector_store": True,
-    "chunk_size": 750,
-    "chunk_overlap": 150,
-    "zh_title_enhance": False,
-    "not_refresh_vs_cache": False
-}
-
-
 KB_CHAT_API = CHAT_HOST + "/chat/kb_chat"
 KB_CHAT_DATA = {
     "query": "$query",
@@ -517,8 +509,12 @@ CHAT_CHAT_DATA = {
 
 
 def kb_create(kb_name: str) -> bool:
-    data = KB_CREATE_DATA
-    data["knowledge_base_name"] = kb_name
+    data = {
+        "knowledge_base_name": kb_name,
+        "vector_store_type": "faiss",
+        "kb_info": "",
+        "embed_model": "bge-large-zh-v1.5"
+    }
     with httpx.Client() as client:
         response = client.post(KB_CREATE_API, json=data)
         print(response)
@@ -527,17 +523,33 @@ def kb_create(kb_name: str) -> bool:
     return False
 
 
-def kb_upload_docks(files) -> bool:
-    with httpx.Client() as client:
-        response = client.post(KB_UPLOAD_DOCS_API, data=KB_UPLOAD_DOCS_DATA, files=files)
-        print(response)
-    if response.status_code == 200 and response.json()["data"]["failed_files"].length == 0:
-        return True
+async def kb_upload_docs(kb_name: str, docs_path: str) -> bool:
+    data = {
+        "knowledge_base_name": kb_name,
+        "override": True,
+        "to_vector_store": True,
+        "chunk_size": 750,
+        "chunk_overlap": 150,
+        "zh_title_enhance": False,
+        "not_refresh_vs_cache": False
+    }
+    async with httpx.AsyncClient() as client:
+        files_to_upload = []
+        for filename in os.listdir(docs_path):
+            file_path = os.path.join(docs_path, filename)
+            if os.path.isfile(file_path):
+                with open(file_path, "rb") as file:
+                    files_to_upload.append(("file", file))
+        if files_to_upload:
+            response = await client.post(KB_UPLOAD_DOCS_API, data=data, files=files_to_upload)
+            print(response)
+            if response.status_code == 200 and response.json()["data"]["failed_files"].length == 0:
+                return True
     return False
 
 
-@router.post("/chat/file-chat")
-async def chat_file(req: FileChat):
+@router.post("/chat/kb-chat", tags=["chat"])
+async def kb_chat(req: KbChat):
     async def generate():
         async with httpx.AsyncClient() as client:
             async with client.stream("POST", KB_CHAT_API, json=KB_CHAT_DATA) as stream:
@@ -546,7 +558,7 @@ async def chat_file(req: FileChat):
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 
-@router.post("/chat/chat")
+@router.post("/chat/chat", tags=["chat"])
 async def chat_chat(req: ChatChat):
     async def generate():
         async with httpx.AsyncClient() as client:

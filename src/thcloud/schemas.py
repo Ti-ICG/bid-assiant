@@ -179,12 +179,7 @@ class UpdateResponseIndicatorDetail(BaseResponseIndicatorDetail):
 
 #  Bid_catalog
 class BaseBidCatalog(BaseModel):
-    id: str
-    parent_id: str
-    title: str
-    level: int
-    scheme_id: int
-    # is_flag :bool
+    pass
 
 
 class BidCatalogSchemas(BaseBidCatalog, InDBMixin):
@@ -193,11 +188,16 @@ class BidCatalogSchemas(BaseBidCatalog, InDBMixin):
 
 
 class CreateBidCatalog(BaseBidCatalog):
+    id: str
+    parent_id: str
+    title: str
+    level: int
+    scheme_id: int
     pass
 
 
 class UpdateBidCatalog(BaseBidCatalog):
-    pass
+    title: str
 
 
 #  Bid_catalog_content

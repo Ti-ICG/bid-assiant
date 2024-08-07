@@ -46,6 +46,10 @@ class BaseDAO(Generic[ModelType, CreateSchema, UpdateSchema]):
         result = session.query(self.model).offset(offset).limit(limit).all()
         return result
 
+    def get_all(self, session: Session) -> List[ModelType]:
+        result = session.query(self.model).all()
+        return result
+
     def get_by_id(
         self,
         session: Session,

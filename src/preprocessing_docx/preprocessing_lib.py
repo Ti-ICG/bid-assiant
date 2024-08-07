@@ -5,12 +5,24 @@ import torch.nn.functional as F
 import os
 import docx
 from docx import Document
+import json
 
+# tokenizer = BertTokenizer.from_pretrained(
+#     'shibing624/text2vec-bge-large-chinese', local_files_only=True)  # shibing624/text2vec-bge-large-chinese     shibing624/text2vec-base-chinese   sentence-transformers/all-MiniLM-L6-v2   # model_max_length=xxx
+# model = BertModel.from_pretrained(
+#     'shibing624/text2vec-bge-large-chinese', local_files_only=True)  # 效果                  >            效果                   >
 
-tokenizer = BertTokenizer.from_pretrained(
-    'shibing624/text2vec-bge-large-chinese', local_files_only=True)  # shibing624/text2vec-bge-large-chinese     shibing624/text2vec-base-chinese   sentence-transformers/all-MiniLM-L6-v2   # model_max_length=xxx
-model = BertModel.from_pretrained(
-    'shibing624/text2vec-bge-large-chinese', local_files_only=True)  # 效果                  >            效果                   >
+import openai
+
+client = openai.Client(
+api_key="cannot be empty",
+base_url="http://192.168.200.17:9997/v1"
+)
+# client.embeddings.create(
+# model="bge-large-zh-v1.5",
+# input=["What is the capital of China?"]
+# )
+
 
 # Mean Pooling - Take attention mask into account for correct averaging
 def mean_pooling(model_output, attention_mask):
@@ -24,30 +36,57 @@ def heading2vec(heading_sentences):
 
     sentences = heading_sentences
 
-    # Tokenize sentences
-    encoded_input = tokenizer(sentences, padding=True, truncation=True, return_tensors='pt')
+    # # Tokenize sentences
+    # encoded_input = tokenizer(sentences, padding=True, truncation=True, return_tensors='pt')
 
-    # Compute token embeddings
-    with torch.no_grad():
-        model_output = model(**encoded_input)
-    # Perform pooling. In this case, mean pooling.
-    sentence_embeddings = mean_pooling(model_output, encoded_input['attention_mask'])
+    # # Compute token embeddings
+    # with torch.no_grad():
+    #     model_output = model(**encoded_input)
+    # # Perform pooling. In this case, mean pooling.
+    # sentence_embeddings = mean_pooling(model_output, encoded_input['attention_mask'])
+    
+    sentence_embeddings = []
+    for sentence in sentences:
+        embedding = client.embeddings.create(
+            model="text2vec-bge-large-chinese",
+            input=sentence
+        )
+        sentence_embeddings.append(embedding)
+        
     return sentence_embeddings
 
 
 # 比较向量相似度
 def compute_similarity(input_text, sentence_embedding):
-    # Tokenize input text
-    encoded_input = tokenizer([input_text], padding=True, truncation=True, return_tensors='pt')
+    # # Tokenize input text
+    # encoded_input = tokenizer([input_text], padding=True, truncation=True, return_tensors='pt')
 
-    # Compute token embeddings
-    with torch.no_grad():
-        model_output = model(**encoded_input)
-    # Perform pooling. In this case, mean pooling.
-    input_embedding = mean_pooling(model_output, encoded_input['attention_mask'])
+    # # Compute token embeddings
+    # with torch.no_grad():
+    #     model_output = model(**encoded_input)
+    # # Perform pooling. In this case, mean pooling.
+    # input_embedding = mean_pooling(model_output, encoded_input['attention_mask'])
+    input_embedding=client.embeddings.create(
+    model="text2vec-bge-large-chinese",
+    input= input_text
+    )
 
+    input_embedding_data =  torch.tensor(input_embedding.data[0].embedding).unsqueeze(0)
+    
+    sentence_embedding_data = []
+    for embedding in sentence_embedding:
+        embedding_data = torch.tensor(embedding.data[0].embedding).unsqueeze(0)
+        sentence_embedding_data.append(embedding_data)
+    sentence_embedding_data = torch.cat(sentence_embedding_data, dim=0)
+    
+    print("***********************")
+    print(input_embedding_data)
+    print("***********************")
+    print(sentence_embedding_data)
+    print("***********************")
     # Compute cosine similarity
-    similarities = F.cosine_similarity(input_embedding, sentence_embedding)
+    similarities = F.cosine_similarity(input_embedding_data,sentence_embedding_data)
+    
     return similarities
 
 

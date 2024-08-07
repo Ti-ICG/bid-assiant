@@ -213,3 +213,4 @@ Temporary Items
 .idea
 .tmp
 **/settings.local.yml
+poetry.lock

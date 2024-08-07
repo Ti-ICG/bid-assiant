@@ -52,3 +52,26 @@ def migrate(ctx: Context, help, args):
         if help:
             argv.append('--help')
         config.main(prog=ctx.command_path, argv=argv)
+        
+        
+        
+@main.command()
+@click.option('-h', '--host', show_default=True, help=f'Host IP. Default: {settings.HOST}')
+@click.option('-p', '--port', show_default=True, type=int, help=f'Port. Default: {settings.PORT}')
+@click.option('--level', help='Log level')
+def debug(host, port, level):
+    """Start server in debug mode."""
+    import debugpy
+    debugpy.listen(address=('0.0.0.0', 5678))
+    click.echo("Debugger is attached, you can now connect to the process using VS Code.")
+    
+    kwargs = {
+        'LOGLEVEL': level,
+        'HOST': host,
+        'PORT': port,
+    }
+    for name, value in kwargs.items():
+        if value:
+            settings.set(name, value)
+
+    Server().run()

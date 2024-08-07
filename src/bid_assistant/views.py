@@ -1,3 +1,4 @@
+import logging
 import os
 
 import httpx
@@ -5,7 +6,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 from starlette.responses import StreamingResponse
 
-from tests.preprocessing_docx import preprocessing_lib
+from preprocessing_docx import preprocessing_lib
 from thcloud.config import settings
 from thcloud.dependencies import CommonQueryParams, get_db
 from thcloud.minio_db import bucket
@@ -103,8 +104,8 @@ async def create(
     preprocessing_lib.preprocess_docx(bid_path, out_path, confidence, match_text)
 
     kb_name = f"bid-assistant/{scheme.id}"
-    kb_create(kb_name)
-    await kb_upload_docs(kb_name, out_path)
+    if kb_create(kb_name):
+        await kb_upload_docs(kb_name, out_path)
 
     return scheme
 
@@ -532,20 +533,36 @@ async def kb_upload_docs(kb_name: str, docs_path: str) -> bool:
         "chunk_size": 750,
         "chunk_overlap": 150,
         "zh_title_enhance": False,
+        "docs": "",
         "not_refresh_vs_cache": False
     }
-    async with httpx.AsyncClient() as client:
-        files_to_upload = []
-        for filename in os.listdir(docs_path):
-            file_path = os.path.join(docs_path, filename)
-            if os.path.isfile(file_path):
-                with open(file_path, "rb") as file:
-                    files_to_upload.append(("file", file))
-        if files_to_upload:
-            response = await client.post(KB_UPLOAD_DOCS_API, data=data, files=files_to_upload)
-            print(response.json())
-            if response.status_code == 200 and response.json()["data"]["failed_files"].length == 0:
-                return True
+    try:
+        async with httpx.AsyncClient() as client:
+            files_to_upload = []
+            for filename in os.listdir(docs_path):
+                file_path = os.path.join(docs_path, filename)
+                if os.path.isfile(file_path):
+                    try:
+                        files_to_upload.append(("files", open(file_path, "rb")))
+                    except IOError as e:
+                        logging.error(f"Unable to open file {file_path}: {e}")
+                        raise
+
+            if files_to_upload:
+                response = await client.post(KB_UPLOAD_DOCS_API, data=data, files=files_to_upload)
+                print(response.json())
+                for _, file in files_to_upload:
+                    file.close()
+
+                if response.status_code == 200:
+                    failed_files = response.json()['data'].get('failed_files', {})
+                    if not failed_files:
+                        return True
+                    else:
+                        logging.error(f"以下文件上传失败：{failed_files}")
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+        raise
     return False
 
 

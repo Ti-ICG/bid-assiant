@@ -390,10 +390,12 @@ def delete(pk: int, session: Session = Depends(get_db)):
 bid_catalog_service = BidCatalogService()
 
 
+# @router.get("/bid_catalog", tags=["bid_catalog"])
+# def get(session: Session = Depends(get_db), commons: CommonQueryParams = Depends()):
+#     return bid_catalog_service.get(session, offset=commons.offset, limit=commons.limit)
 @router.get("/bid_catalog", tags=["bid_catalog"])
-def get(session: Session = Depends(get_db), commons: CommonQueryParams = Depends()):
-    return bid_catalog_service.get(session, offset=commons.offset, limit=commons.limit)
-
+def get_all(session: Session = Depends(get_db)):
+    return bid_catalog_service.get_all(session)
 
 @router.get("/bid_catalog/{pk}", tags=["bid_catalog"])
 def get_by_id(pk: str, session: Session = Depends(get_db)):

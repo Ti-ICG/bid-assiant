@@ -43,7 +43,7 @@ bid_assiant = "thcloud.cmdline:main"
 [[tool.poetry.source]]
 name = "tsinghua-pypi"
 url = "https://pypi.tuna.tsinghua.edu.cn/simple"
-default = true
+priority = "primary"
 
 [[tool.poetry.packages]]
 # 指定包含的包

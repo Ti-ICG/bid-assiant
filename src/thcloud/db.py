@@ -1,11 +1,13 @@
 """Database connections"""
-
+import pymysql
 from sqlalchemy.engine import create_engine
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from thcloud.config import settings
+
+pymysql.install_as_MySQLdb()
 
 url = URL(
     drivername=settings.DATABASE.DRIVER,

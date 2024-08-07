@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from starlette.responses import StreamingResponse
 
 from preprocessing_docx import preprocessing_lib
-from thcloud.config import settings
+from thcloud.config import settings, prompts
 from thcloud.dependencies import CommonQueryParams, get_db
 from thcloud.minio_db import bucket
 from thcloud.models import Bid_catalog
@@ -103,9 +103,9 @@ async def create(
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     preprocessing_lib.preprocess_docx(bid_path, out_path, confidence, match_text)
 
-    kb_name = f"bid-assistant/{scheme.id}"
-    if kb_create(kb_name):
-        await kb_upload_docs(kb_name, out_path)
+    kb_name = get_kb_name(scheme.id)
+    kb_create(kb_name)
+    await kb_upload_docs(kb_name, out_path)
 
     return scheme
 
@@ -479,39 +479,14 @@ CHAT_HOST = "http://192.168.200.17:7861"
 KB_CREATE_API = CHAT_HOST + "/knowledge_base/create_knowledge_base"
 KB_UPLOAD_DOCS_API = CHAT_HOST + "/knowledge_base/upload_docs"
 KB_CHAT_API = CHAT_HOST + "/chat/kb_chat"
-KB_CHAT_DATA = {
-    "query": "$query",
-    "mode": "local_kb",
-    "kb_name": "$knowledge_base_name",
-    "top_k": 3,
-    "score_threshold": 2,
-    "history": [],
-    "stream": True,
-    "model": "glm-4-9b-chat-1m",
-    "temperature": 0.7,
-    "max_tokens": 30000,
-    "prompt_name": "default",
-    "return_direct": False
-}
-
 CHAT_CHAT_API = CHAT_HOST + "/chat/chat/completions"
-CHAT_CHAT_DATA = {
-    "messages": [
-        {
-            "content": "你是谁",
-            "role": "system",
-            "name": "string",
-        }
-    ],
-    "model": "glm-4-9b-chat-1m",
-    "max_tokens": 2048,
-    "n": 0,
-    "stream": True,
-    "temperature": 0.7,
-}
 
 
-def kb_create(kb_name: str) -> bool:
+def get_kb_name(scheme_id: int) -> str:
+    return f"bid-assistant/{scheme_id}"
+
+
+def kb_create(kb_name: str):
     data = {
         "knowledge_base_name": kb_name,
         "vector_store_type": "faiss",
@@ -520,12 +495,11 @@ def kb_create(kb_name: str) -> bool:
     }
     with httpx.Client() as client:
         response = client.post(KB_CREATE_API, json=data)
-    if response.status_code == 200:
-        return True
-    return False
+    if response.status_code != 200:
+        raise HTTPException(status_code=500, detail="Create knowledge base failed.")
 
 
-async def kb_upload_docs(kb_name: str, docs_path: str) -> bool:
+async def kb_upload_docs(kb_name: str, docs_path: str):
     data = {
         "knowledge_base_name": kb_name,
         "override": True,
@@ -542,11 +516,7 @@ async def kb_upload_docs(kb_name: str, docs_path: str) -> bool:
             for filename in os.listdir(docs_path):
                 file_path = os.path.join(docs_path, filename)
                 if os.path.isfile(file_path):
-                    try:
-                        files_to_upload.append(("files", open(file_path, "rb")))
-                    except IOError as e:
-                        logging.error(f"Unable to open file {file_path}: {e}")
-                        raise
+                    files_to_upload.append(("files", open(file_path, "rb")))
 
             if files_to_upload:
                 response = await client.post(KB_UPLOAD_DOCS_API, data=data, files=files_to_upload)
@@ -556,21 +526,37 @@ async def kb_upload_docs(kb_name: str, docs_path: str) -> bool:
 
                 if response.status_code == 200:
                     failed_files = response.json()['data'].get('failed_files', {})
-                    if not failed_files:
-                        return True
-                    else:
+                    if failed_files:
                         logging.error(f"以下文件上传失败：{failed_files}")
+                        raise HTTPException(status_code=500, detail="Upload docs to knowledge base failed.")
     except Exception as e:
         logging.error(f"An error occurred: {e}")
-        raise
-    return False
+        raise HTTPException(status_code=500, detail="Create knowledge base failed.")
 
 
 @router.post("/chat/kb-chat", tags=["chat"])
 async def kb_chat(req: KbChat):
+    prompt = prompts.kb_chat.get(req.query)
+    if prompt is None:
+        raise HTTPException(status_code=500, detail="Param query error.")
+    data = {
+        "query": prompt,
+        "mode": "local_kb",
+        "kb_name": get_kb_name(req.scheme_id),
+        "top_k": 3,
+        "score_threshold": 1.79,
+        "history": [],
+        "stream": True,
+        "model": "glm-4-9b-chat-1m",
+        "temperature": 0.7,
+        "max_tokens": 30000,
+        "prompt_name": "default",
+        "return_direct": False
+    }
+
     async def generate():
         async with httpx.AsyncClient() as client:
-            async with client.stream("POST", KB_CHAT_API, json=KB_CHAT_DATA) as stream:
+            async with client.stream("POST", KB_CHAT_API, json=data) as stream:
                 async for chunk in stream.aiter_text():
                     yield chunk
     return StreamingResponse(generate(), media_type="text/event-stream")
@@ -578,9 +564,24 @@ async def kb_chat(req: KbChat):
 
 @router.post("/chat/chat", tags=["chat"])
 async def chat_chat(req: ChatChat):
+    data = {
+        "messages": [
+            {
+                "content": "你是谁",
+                "role": "system",
+                "name": "string",
+            }
+        ],
+        "model": "glm-4-9b-chat-1m",
+        "max_tokens": 2048,
+        "n": 0,
+        "stream": True,
+        "temperature": 0.7,
+    }
+
     async def generate():
         async with httpx.AsyncClient() as client:
-            async with client.stream("POST", CHAT_CHAT_API, json=CHAT_CHAT_DATA) as stream:
+            async with client.stream("POST", CHAT_CHAT_API, json=data) as stream:
                 async for chunk in stream.aiter_text():
                     yield chunk
     return StreamingResponse(generate(), media_type="text/event-stream")

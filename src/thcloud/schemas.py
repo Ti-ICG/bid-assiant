@@ -221,6 +221,7 @@ class UpdateBidCatalogContent(BaseBidCatalogContent):
 
 #  Chat
 class KbChat(BaseModel):
+    scheme_id: int
     query: str
 
 

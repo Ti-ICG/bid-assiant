@@ -36,6 +36,10 @@ class BaseService(Generic[ModelType, CreateSchema, UpdateSchema]):
     def get(self, session: Session, offset=0, limit=10) -> List[ModelType]:
         """"""
         return self.dao.get(session, offset=offset, limit=limit)
+        
+    def get_all(self, session: Session) -> List[ModelType]:
+        """"""
+        return self.dao.get_all(session)
 
     def total(self, session: Session) -> int:
         return self.dao.count(session)

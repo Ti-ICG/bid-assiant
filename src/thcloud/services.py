@@ -8,6 +8,7 @@ from thcloud.dao import (
     BaseDAO,
     BidCatalogContentDAO,
     BidCatalogDAO,
+    CatalogPromptDAO,
     RequirementAnalysisDAO,
     RequirementAnalysisDetailDAO,
     ResponseIndicatorDAO,
@@ -19,6 +20,7 @@ from thcloud.dao import (
 from thcloud.models import (
     Bid_catalog,
     Bid_catalog_content,
+    Catalog_prompt,
     Requirement_analysis,
     Requirement_analysis_detail,
     Response_indicator,
@@ -108,3 +110,7 @@ class BidCatalogContentService(
     BaseService[Bid_catalog_content, CreateSchema, UpdateSchema]
 ):
     dao = BidCatalogContentDAO()
+
+
+class CatalogPromptService(BaseService[Catalog_prompt, CreateSchema, UpdateSchema]):
+    dao = CatalogPromptDAO()

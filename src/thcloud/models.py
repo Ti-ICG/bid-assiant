@@ -22,18 +22,6 @@ class CustomBase:
 BaseModel = declarative_base(cls=CustomBase)
 
 
-class Article(BaseModel):
-    """Article table"""
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    title = Column(String(500))
-    body = Column(Text(), nullable=True)
-    create_time = Column(DateTime, default=datetime.now, nullable=False)
-    update_time = Column(
-        DateTime, default=datetime.now, onupdate=datetime.now, nullable=False
-    )
-
-
 class Scheme(BaseModel):
     """scheme table"""  # 方案表
 
@@ -200,8 +188,9 @@ class Bid_catalog(BaseModel):
 
     id = Column(String(10), primary_key=True)  # 目录id
     parent_id = Column(String(10), nullable=True)  # 父节点id
-    title = Column(String(50), nullable=False)  # 目录标题
-    level = Column(Integer, nullable=False)  # 目录层级
+    index = Column(String(20), nullable=True)  # 章节编号
+    title = Column(String(50), nullable=False)  # 章节标题
+    level = Column(Integer, nullable=False)  # 章节层级
     # is_flag = Column(Boolean, nullable=False)               #是否是叶子节点
     scheme_id = Column(Integer, ForeignKey("schemes.id"), nullable=False)  # 所属标书
     create_time = Column(DateTime, default=datetime.now, nullable=False)

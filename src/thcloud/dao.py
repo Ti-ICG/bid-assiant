@@ -145,9 +145,28 @@ class BaseDAO(Generic[ModelType, CreateSchema, UpdateSchema]):
         session.refresh(obj)
         return obj
 
+    def patch_by_scheme_id(
+        self, session: Session, pk: int, obj_in: UpdateSchema
+    ) -> ModelType:
+        """Patch"""
+        obj = self.get_by_scheme_id(session, pk)
+        update_data = obj_in.dict(exclude_unset=True)
+        for key, val in update_data.items():
+            setattr(obj, key, val)
+        session.add(obj)
+        session.commit()
+        session.refresh(obj)
+        return obj
+
     def delete(self, session: Session, pk: int) -> None:
         """Delete"""
         obj = self.get_by_id(session, pk)
+        session.delete(obj)
+        session.commit()
+
+    def delete_by_scheme_id(self, session: Session, pk: int) -> None:
+        """Delete"""
+        obj = self.get_by_scheme_id(session, pk)
         session.delete(obj)
         session.commit()
 

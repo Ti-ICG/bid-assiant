@@ -6,6 +6,7 @@ from sqlalchemy import text
 from thcloud.models import (
     Bid_catalog,
     Bid_catalog_content,
+    Catalog_prompt,
     Requirement_analysis,
     Requirement_analysis_detail,
     Response_indicator,
@@ -17,6 +18,7 @@ from thcloud.models import (
 from thcloud.schemas import (
     CreateBidCatalog,
     CreateBidCatalogContent,
+    CreateCatalogPrompt,
     CreateRequirementAnalysis,
     CreateRequirementAnalysisDetail,
     CreateResponseIndicator,
@@ -28,6 +30,7 @@ from thcloud.schemas import (
     ModelType,
     UpdateBidCatalog,
     UpdateBidCatalogContent,
+    UpdateCatalogPrompt,
     UpdateRequirementAnalysis,
     UpdateRequirementAnalysisDetail,
     UpdateResponseIndicator,
@@ -201,3 +204,10 @@ class BidCatalogContentDAO(
     BaseDAO[Bid_catalog_content, CreateBidCatalogContent, UpdateBidCatalogContent]
 ):
     model = Bid_catalog_content
+
+
+class CatalogPromptDAO(
+    BaseDAO[Catalog_prompt, CreateCatalogPrompt, UpdateCatalogPrompt]
+):
+    model = Catalog_prompt
+

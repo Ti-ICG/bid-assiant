@@ -155,6 +155,15 @@ def get_by_id(pk: int, session: Session = Depends(get_db)):
     return requirement_analysis_service.get_by_id(session, pk)
 
 
+@router.get(
+    "/requirement_analysis/{scheme_pk}",
+    response_model=RequirementAnalysisSchemas,
+    tags=["requirement_analysis"],
+)
+def get_by_scheme_id(scheme_pk: int, session: Session = Depends(get_db)):
+    return requirement_analysis_service.get_by_scheme_id(session, scheme_pk)
+
+
 @router.post(
     "/requirement_analysis",
     response_model=RequirementAnalysisSchemas,
@@ -248,6 +257,13 @@ def get(session: Session = Depends(get_db), commons: CommonQueryParams = Depends
 def get_by_id(pk: int, session: Session = Depends(get_db)):
     return system_framework_service.get_by_id(session, pk)
 
+@router.get(
+    "/system_framework/{scheme_pk}",
+    response_model=SystemFrameworkSchemas,
+    tags=["system_framework"],
+)
+def get_by_scheme_id(scheme_pk: int, session: Session = Depends(get_db)):
+    return system_framework_service.get_by_scheme_id(session, scheme_pk)
 
 
 @router.post(
@@ -336,6 +352,14 @@ def get(session: Session = Depends(get_db), commons: CommonQueryParams = Depends
 def get_by_id(pk: int, session: Session = Depends(get_db)):
     return response_indicator_service.get_by_id(session, pk)
 
+
+@router.get(
+    "/response_indicator/{scheme_pk}",
+    response_model=ResponseIndicatorSchemas,
+    tags=["response_indicator"],
+)
+def get_by_scheme_id(scheme_pk: int, session: Session = Depends(get_db)):
+    return response_indicator_service.get_by_scheme_id(session, scheme_pk)
 
 
 @router.post(

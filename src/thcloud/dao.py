@@ -104,16 +104,12 @@ class BaseDAO(Generic[ModelType, CreateSchema, UpdateSchema]):
             file_url = file_url.file_path_url
         else:
             raise HTTPException(status_code=404, detail="Bidfile is not exists")
-        response = []
-        response.append(
-            {
-                "id": pk,
-                "requirement_content": requirement_content,
-                "framework_content": framework_content,
-                "indicator_content": indicator_content,
-                "file_url": file_url,
-            }
-        )
+        response = {
+            "requirement_content": requirement_content,
+            "framework_content": framework_content,
+            "indicator_content": indicator_content,
+            "file_url": file_url,
+        }
         return response
 
     def create(self, session: Session, obj_in: CreateSchema) -> ModelType:

@@ -37,9 +37,12 @@ class BaseService(Generic[ModelType, CreateSchema, UpdateSchema]):
         """"""
         return self.dao.get(session, offset=offset, limit=limit)
         
-    def get_all(self, session: Session) -> List[ModelType]:
+    def get_all_by_id(self, session: Session, pk: int) -> List[ModelType]:
         """"""
-        return self.dao.get_all(session)
+        return self.dao.get_all_by_id(session, pk)
+
+    def get_detail(self, session: Session, pk: int) -> ModelType:
+        return self.dao.get_detail(session, pk)
 
     def total(self, session: Session) -> int:
         return self.dao.count(session)

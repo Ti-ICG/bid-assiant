@@ -203,6 +203,7 @@ class UpdateBidCatalog(BaseBidCatalog):
 #  Bid_catalog_content
 class BaseBidCatalogContent(BaseModel):
     catalog_id: str
+    index: str
     content: str
 
 

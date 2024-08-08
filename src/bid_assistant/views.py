@@ -23,6 +23,8 @@ from thcloud.schemas import (
     CreateScheme,
     CreateSystemFramework,
     CreateSystemFrameworkDetail,
+    DetailScheme,
+    DownloadScheme,
     RequirementAnalysisDetailSchemas,
     RequirementAnalysisSchemas,
     ResponseIndicatorDetailSchemas,

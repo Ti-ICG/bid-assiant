@@ -65,12 +65,12 @@ def get(session: Session = Depends(get_db), commons: CommonQueryParams = Depends
     return scheme_service.get(session, offset=commons.offset, limit=commons.limit)
 
 
-@router.get("/schemes/{pk}", tags=["Scheme"])
+@router.get("/schemes/{pk}", response_model=SchemeSchemas, tags=["Scheme"])
 def get_by_id(pk: int, session: Session = Depends(get_db)):
     return scheme_service.get_by_id(session, pk)
 
 
-@router.get("/schemes/detail/{pk}", tags=["Scheme"])
+@router.get("/schemes/detail/{pk}", response_model=DetailScheme, tags=["Scheme"])
 def get_detail(pk: int, session: Session = Depends(get_db)):
     return scheme_service.get_detail(session, pk)
 
@@ -116,7 +116,7 @@ async def create(
 
 
 # 从Minio中获取文件
-@router.get("/schemes/download/", tags=["Scheme"])
+@router.get("/schemes/download/", response_model=DownloadScheme, tags=["Scheme"])
 def download(bucket_name: str, filename: str):
     # 获取下载url
     url = bucket.presigned_get_file(bucket_name, filename)
@@ -144,7 +144,11 @@ def get(session: Session = Depends(get_db), commons: CommonQueryParams = Depends
     )
 
 
-@router.get("/requirement_analysis/{pk}", tags=["requirement_analysis"])
+@router.get(
+    "/requirement_analysis/{pk}",
+    response_model=RequirementAnalysisSchemas,
+    tags=["requirement_analysis"],
+)
 def get_by_id(pk: int, session: Session = Depends(get_db)):
     return requirement_analysis_service.get_by_id(session, pk)
 
@@ -234,9 +238,14 @@ def get(session: Session = Depends(get_db), commons: CommonQueryParams = Depends
     )
 
 
-@router.get("/system_framework/{pk}", tags=["system_framework"])
+@router.get(
+    "/system_framework/{pk}",
+    response_model=SystemFrameworkSchemas,
+    tags=["system_framework"],
+)
 def get_by_id(pk: int, session: Session = Depends(get_db)):
     return system_framework_service.get_by_id(session, pk)
+
 
 
 @router.post(
@@ -317,9 +326,14 @@ def get(session: Session = Depends(get_db), commons: CommonQueryParams = Depends
     )
 
 
-@router.get("/response_indicator/{pk}", tags=["response_indicator"])
+@router.get(
+    "/response_indicator/{pk}",
+    response_model=ResponseIndicatorSchemas,
+    tags=["response_indicator"],
+)
 def get_by_id(pk: int, session: Session = Depends(get_db)):
     return response_indicator_service.get_by_id(session, pk)
+
 
 
 @router.post(

@@ -46,8 +46,11 @@ class DownloadScheme(BaseScheme):
 
 
 class DetailScheme(BaseScheme):
+    requirement_id: int
     requirement_content: str
+    framework_id: int
     framework_content: str
+    indicator_id: int
     indicator_content: str
     file_url: str
 

@@ -70,6 +70,11 @@ def get_by_id(pk: int, session: Session = Depends(get_db)):
     return scheme_service.get_by_id(session, pk)
 
 
+@router.get("/schemes/detail/{pk}", tags=["Scheme"])
+def get_detail(pk: int, session: Session = Depends(get_db)):
+    return scheme_service.get_detail(session, pk)
+
+
 # 上传文件并存储在Minio
 @router.post("/schemes", response_model=SchemeSchemas, tags=["Scheme"])
 async def create(
@@ -391,16 +396,18 @@ def delete(pk: int, session: Session = Depends(get_db)):
 bid_catalog_service = BidCatalogService()
 
 
-# @router.get("/bid_catalog", tags=["bid_catalog"])
-# def get(session: Session = Depends(get_db), commons: CommonQueryParams = Depends()):
-#     return bid_catalog_service.get(session, offset=commons.offset, limit=commons.limit)
-@router.get("/bid_catalog", tags=["bid_catalog"])
-def get_all(session: Session = Depends(get_db)):
-    return bid_catalog_service.get_all(session)
-
 @router.get("/bid_catalog/{pk}", tags=["bid_catalog"])
-def get_by_id(pk: str, session: Session = Depends(get_db)):
-    return bid_catalog_service.get_by_id(session, pk)
+def get_all_by_id(pk: int, session: Session = Depends(get_db)):
+    result = bid_catalog_service.get_all_by_id(session, pk)
+    for i in result:
+        i.children = (
+            session.query(Bid_catalog).filter(Bid_catalog.parent_id == i.id).all()
+        )
+    data = []
+    for i in result:
+        if i.level == 1:
+            data.append(i)
+    return data
 
 
 @router.post("/bid_catalog", response_model=BidCatalogSchemas, tags=["bid_catalog"])

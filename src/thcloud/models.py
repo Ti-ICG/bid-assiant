@@ -200,6 +200,9 @@ class Bid_catalog(BaseModel):
     detail = relationship(
         "Bid_catalog_content", cascade="all, delete-orphan", backref="bid_catalog"
     )
+    prompt = relationship(
+        "Catalog_prompt", cascade="all, delete-orphan", backref="bid_catalog"
+    )
 
 
 class Bid_catalog_content(BaseModel):
@@ -208,9 +211,20 @@ class Bid_catalog_content(BaseModel):
     __tablename__ = "bid_catalog_content"
 
     id = Column(Integer, primary_key=True, autoincrement=True)  # 标书目录内容id
-    catalog_id = Column(String(10), ForeignKey("bid_catalog.id"))  # 所属目录id
+    catalog_id = Column(String(20), ForeignKey("bid_catalog.id"))  # 所属目录id
     content = Column(Text, nullable=True)  # 目录具体内容
     create_time = Column(DateTime, default=datetime.now, nullable=False)
     update_time = Column(
         DateTime, default=datetime.now, onupdate=datetime.now, nullable=False
     )
+
+
+class Catalog_prompt(BaseModel):
+    """catalog_prompt table"""  # 目录提示词表
+
+    __tablename__ = "catalog_prompt"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)  # 提示词id
+    catalog_id = Column(String(20), ForeignKey("bid_catalog.id"))  # 所属目录id
+    prompt_name = Column(String(50), nullable=True)  # 提示词名称
+    prompt_content = Column(Text, nullable=True)  # 提示词具体内容

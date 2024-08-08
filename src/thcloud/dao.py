@@ -56,6 +56,13 @@ class BaseDAO(Generic[ModelType, CreateSchema, UpdateSchema]):
     ) -> List[ModelType]:
         return session.query(self.model).filter(self.model.scheme_id == pk).all()
 
+    def get_by_scheme_id(
+        self,
+        session: Session,
+        pk: int,
+    ) -> List[ModelType]:
+        return session.query(self.model).filter(self.model.scheme_id == pk).first()
+
     def get_by_id(
         self,
         session: Session,
@@ -71,32 +78,35 @@ class BaseDAO(Generic[ModelType, CreateSchema, UpdateSchema]):
 
         requirement_content = session.execute(
             text(
-                "select requirement_content from requirement_analysis where scheme_id = :id"
+                "select id,requirement_content from requirement_analysis where scheme_id = :id"
             ),
             params={"id": pk},
         ).first()
         if requirement_content is not None:
-            requirement_content = requirement_content[0]
+            requirement_id = requirement_content[0]
+            requirement_content = requirement_content[1]
         else:
             requirement_content = ""
         framework_content = session.execute(
             text(
-                "select framework_content from system_framework where scheme_id = :id"
+                "select id,framework_content from system_framework where scheme_id = :id"
             ),
             params={"id": pk},
         ).first()
         if framework_content is not None:
-            framework_content = framework_content[0]
+            framework_id = framework_content[0]
+            framework_content = framework_content[1]
         else:
             framework_content = ""
         indicator_content = session.execute(
             text(
-                "select indicator_content from response_indicators where scheme_id = :id"
+                "select id,indicator_content from response_indicators where scheme_id = :id"
             ),
             params={"id": pk},
         ).first()
         if indicator_content is not None:
-            indicator_content = indicator_content[0]
+            indicator_id = indicator_content[0]
+            indicator_content = indicator_content[1]
         else:
             indicator_content = ""
         file_url = session.query(self.model).get(pk)
@@ -104,12 +114,17 @@ class BaseDAO(Generic[ModelType, CreateSchema, UpdateSchema]):
             file_url = file_url.file_path_url
         else:
             raise HTTPException(status_code=404, detail="Bidfile is not exists")
+
         response = {
+            "requirement_id": requirement_id,
             "requirement_content": requirement_content,
+            "framework_id": framework_id,
             "framework_content": framework_content,
+            "indicator_id": indicator_id,
             "indicator_content": indicator_content,
             "file_url": file_url,
         }
+
         return response
 
     def create(self, session: Session, obj_in: CreateSchema) -> ModelType:

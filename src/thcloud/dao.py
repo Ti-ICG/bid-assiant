@@ -1,8 +1,8 @@
 from typing import Generic, List
-
+from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
-
+from sqlalchemy import text
 from thcloud.models import (
     Bid_catalog,
     Bid_catalog_content,
@@ -46,9 +46,12 @@ class BaseDAO(Generic[ModelType, CreateSchema, UpdateSchema]):
         result = session.query(self.model).offset(offset).limit(limit).all()
         return result
 
-    def get_all(self, session: Session) -> List[ModelType]:
-        result = session.query(self.model).all()
-        return result
+    def get_all_by_id(
+        self,
+        session: Session,
+        pk: int,
+    ) -> List[ModelType]:
+        return session.query(self.model).filter(self.model.scheme_id == pk).all()
 
     def get_by_id(
         self,
@@ -56,6 +59,59 @@ class BaseDAO(Generic[ModelType, CreateSchema, UpdateSchema]):
         pk: int,
     ) -> ModelType:
         return session.query(self.model).get(pk)
+
+    def get_detail(
+        self,
+        session: Session,
+        pk: int,
+    ) -> ModelType:
+
+        requirement_content = session.execute(
+            text(
+                "select requirement_content from requirement_analysis where scheme_id = :id"
+            ),
+            params={"id": pk},
+        ).first()
+        if requirement_content is not None:
+            requirement_content = requirement_content[0]
+        else:
+            requirement_content = ""
+        framework_content = session.execute(
+            text(
+                "select framework_content from system_framework where scheme_id = :id"
+            ),
+            params={"id": pk},
+        ).first()
+        if framework_content is not None:
+            framework_content = framework_content[0]
+        else:
+            framework_content = ""
+        indicator_content = session.execute(
+            text(
+                "select indicator_content from response_indicators where scheme_id = :id"
+            ),
+            params={"id": pk},
+        ).first()
+        if indicator_content is not None:
+            indicator_content = indicator_content[0]
+        else:
+            indicator_content = ""
+        file_url = session.query(self.model).get(pk)
+        if file_url is not None:
+            file_url = file_url.file_path_url
+        else:
+            raise HTTPException(status_code=404, detail="Bidfile is not exists")
+        response = []
+        response.append(
+            {
+                "id": pk,
+                "requirement_content": requirement_content,
+                "framework_content": framework_content,
+                "indicator_content": indicator_content,
+                "file_url": file_url,
+            }
+        )
+        return response
 
     def create(self, session: Session, obj_in: CreateSchema) -> ModelType:
         """Create"""

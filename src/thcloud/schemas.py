@@ -20,21 +20,36 @@ class InDBMixin(BaseModel):
 
 #  方案
 class BaseScheme(BaseModel):
-    scheme_name: str
+    pass
 
 
 class SchemeSchemas(BaseScheme, InDBMixin):
+    catalog_url: bytes = File(...)
+    file_path_url: bytes = File(...)
+    scheme_name: str
     create_time: datetime
     update_time: datetime
 
 
 class CreateScheme(BaseScheme):
+    scheme_name: str
     catalog_url: bytes = File(...)
     file_path_url: bytes = File(...)
 
 
 class UpdateScheme(BaseScheme):
     pass
+
+
+class DownloadScheme(BaseScheme):
+    url: bytes = File(...)
+
+
+class DetailScheme(BaseScheme):
+    requirement_content: str
+    framework_content: str
+    indicator_content: str
+    file_url: str
 
 
 #  用户
@@ -59,9 +74,11 @@ class UpdateScheme(BaseScheme):
 class BaseRequirementAnalysis(BaseModel):
     scheme_id: int
     requirement_content: str
+    tmp_requirement_content: str
 
 
 class RequirementAnalysisSchemas(BaseRequirementAnalysis, InDBMixin):
+
     create_time: datetime
     update_time: datetime
 
@@ -102,6 +119,7 @@ class UpdateRequirementAnalysisDetail(BaseRequirementAnalysisDetail):
 class BaseSystemFramework(BaseModel):
     scheme_id: int
     framework_content: str
+    tmp_framework_content: str
 
 
 class SystemFrameworkSchemas(BaseSystemFramework, InDBMixin):
@@ -142,6 +160,7 @@ class UpdateSystemFrameworkDetail(BaseSystemFrameworkDetail):
 class BaseResponseIndicator(BaseModel):
     scheme_id: int
     indicator_content: str
+    tmp_indicator_content: str
 
 
 class ResponseIndicatorSchemas(BaseResponseIndicator, InDBMixin):
@@ -179,10 +198,17 @@ class UpdateResponseIndicatorDetail(BaseResponseIndicatorDetail):
 
 #  Bid_catalog
 class BaseBidCatalog(BaseModel):
-    pass
+    index: str
+    title: str
+
+    # is_flag :bool
 
 
 class BidCatalogSchemas(BaseBidCatalog, InDBMixin):
+    id: str
+    parent_id: str
+    level: int
+    scheme_id: int
     create_time: datetime
     update_time: datetime
 
@@ -190,20 +216,17 @@ class BidCatalogSchemas(BaseBidCatalog, InDBMixin):
 class CreateBidCatalog(BaseBidCatalog):
     id: str
     parent_id: str
-    title: str
     level: int
     scheme_id: int
-    pass
 
 
 class UpdateBidCatalog(BaseBidCatalog):
-    title: str
+    pass
 
 
 #  Bid_catalog_content
 class BaseBidCatalogContent(BaseModel):
     catalog_id: str
-    index: str
     content: str
 
 

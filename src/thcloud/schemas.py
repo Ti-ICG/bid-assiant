@@ -243,6 +243,24 @@ class UpdateBidCatalogContent(BaseBidCatalogContent):
     pass
 
 
+#  Catalog_prompt
+class BaseCatalogPrompt(BaseModel):
+    catalog_id: str
+
+
+class CatalogPromptSchemas(BaseCatalogPrompt, InDBMixin):
+    create_time: datetime
+    update_time: datetime
+
+
+class CreateCatalogPrompt(BaseCatalogPrompt):
+    content: str
+
+
+class UpdateCatalogPrompt(BaseCatalogPrompt):
+    content: str
+
+
 #  Chat
 class KbChat(BaseModel):
     scheme_id: int

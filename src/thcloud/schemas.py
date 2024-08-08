@@ -75,19 +75,19 @@ class DetailScheme(BaseScheme):
 
 #  Requirement_analysis
 class BaseRequirementAnalysis(BaseModel):
-    scheme_id: int
+    
     requirement_content: str
     tmp_requirement_content: str
 
 
 class RequirementAnalysisSchemas(BaseRequirementAnalysis, InDBMixin):
-
+    scheme_id: int
     create_time: datetime
     update_time: datetime
 
 
 class CreateRequirementAnalysis(BaseRequirementAnalysis):
-    pass
+    scheme_id: int
 
 
 class UpdateRequirementAnalysis(BaseRequirementAnalysis):
@@ -120,18 +120,19 @@ class UpdateRequirementAnalysisDetail(BaseRequirementAnalysisDetail):
 
 #  System_framework
 class BaseSystemFramework(BaseModel):
-    scheme_id: int
+    
     framework_content: str
     tmp_framework_content: str
 
 
 class SystemFrameworkSchemas(BaseSystemFramework, InDBMixin):
+    scheme_id: int
     create_time: datetime
     update_time: datetime
 
 
 class CreateSystemFramework(BaseSystemFramework):
-    pass
+    scheme_id: int
 
 
 class UpdateSystemFramework(BaseSystemFramework):
@@ -161,18 +162,19 @@ class UpdateSystemFrameworkDetail(BaseSystemFrameworkDetail):
 
 #  Response_indicator
 class BaseResponseIndicator(BaseModel):
-    scheme_id: int
+    
     indicator_content: str
     tmp_indicator_content: str
 
 
 class ResponseIndicatorSchemas(BaseResponseIndicator, InDBMixin):
+    scheme_id: int
     create_time: datetime
     update_time: datetime
 
 
 class CreateResponseIndicator(BaseResponseIndicator):
-    pass
+    scheme_id: int
 
 
 class UpdateResponseIndicator(BaseResponseIndicator):

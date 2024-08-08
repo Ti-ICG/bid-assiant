@@ -467,7 +467,11 @@ def get(session: Session = Depends(get_db), commons: CommonQueryParams = Depends
     )
 
 
-@router.get("/bid_catalog_content/{pk}", tags=["bid_catalog_content"])
+@router.get(
+    "/bid_catalog_content/{pk}",
+    response_model=BidCatalogContentSchemas,
+    tags=["bid_catalog_content"],
+)
 def get_by_id(pk: int, session: Session = Depends(get_db)):
     return bid_catalog_content_service.get_by_id(session, pk)
 

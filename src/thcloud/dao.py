@@ -70,6 +70,22 @@ class BaseDAO(Generic[ModelType, CreateSchema, UpdateSchema]):
     ) -> ModelType:
         return session.query(self.model).get(pk)
 
+    def get_catalog_content(
+        self,
+        session: Session,
+        cpk: int,
+        spk: int,
+    ) -> List[ModelType]:
+        result = (
+            session.query(Bid_catalog_content)
+            .filter(Bid_catalog_content.scheme_id == spk)
+            .filter(Bid_catalog_content.catalog_id == cpk)
+            .first()
+        )
+        if result is None:
+            raise HTTPException(status_code=404, detail="Bid_catalog_content not found")
+        return result
+
     def get_detail(
         self,
         session: Session,
@@ -161,6 +177,19 @@ class BaseDAO(Generic[ModelType, CreateSchema, UpdateSchema]):
         session.refresh(obj)
         return obj
 
+    def patch_catalog_content(
+        self, session: Session, cpk: int, spk: int, obj_in: UpdateSchema
+    ) -> ModelType:
+        """Patch"""
+        obj = self.get_catalog_content(session, cpk, spk)
+        update_data = obj_in.dict(exclude_unset=True)
+        for key, val in update_data.items():
+            setattr(obj, key, val)
+        session.add(obj)
+        session.commit()
+        session.refresh(obj)
+        return obj
+
     def delete(self, session: Session, pk: int) -> None:
         """Delete"""
         obj = self.get_by_id(session, pk)
@@ -170,6 +199,12 @@ class BaseDAO(Generic[ModelType, CreateSchema, UpdateSchema]):
     def delete_by_scheme_id(self, session: Session, pk: int) -> None:
         """Delete"""
         obj = self.get_by_scheme_id(session, pk)
+        session.delete(obj)
+        session.commit()
+
+    def delete_catalog_content(self, session: Session, cpk: int, spk: int) -> None:
+        """Delete"""
+        obj = self.get_catalog_content(session, cpk, spk)
         session.delete(obj)
         session.commit()
 

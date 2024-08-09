@@ -250,20 +250,23 @@ class UpdateBidCatalogContent(BaseBidCatalogContent):
 
 #  Catalog_prompt
 class BaseCatalogPrompt(BaseModel):
-    catalog_id: str
+    type: str
+    sequence: int
+    title: str
+    prompt: str
+    db_content: str
 
 
 class CatalogPromptSchemas(BaseCatalogPrompt, InDBMixin):
-    create_time: datetime
-    update_time: datetime
+    pass
 
 
 class CreateCatalogPrompt(BaseCatalogPrompt):
-    content: str
+    pass
 
 
 class UpdateCatalogPrompt(BaseCatalogPrompt):
-    content: str
+    pass
 
 
 #  Chat

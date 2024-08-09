@@ -155,9 +155,9 @@ def get_by_id(pk: int, session: Session = Depends(get_db)):
 
 
 @router.get(
-    "/requirement_analysis/{scheme_pk}",
+    "/scheme/requirement_analysis/{scheme_pk}",
     response_model=RequirementAnalysisSchemas,
-    tags=["requirement_analysis"],
+    tags=["scheme_requirement_analysis"],
 )
 def get_by_scheme_id(scheme_pk: int, session: Session = Depends(get_db)):
     return requirement_analysis_service.get_by_scheme_id(session, scheme_pk)
@@ -185,10 +185,29 @@ def patch(
 ):
     return requirement_analysis_service.patch(session, pk, obj_in)
 
+@router.patch(
+    "/scheme/requirement_analysis/{scheme_pk}",
+    response_model=RequirementAnalysisSchemas,
+    tags=["scheme_requirement_analysis"],
+)
+def patch_by_scheme_id(
+    scheme_pk: int,
+    obj_in: UpdateRequirementAnalysis,
+    session: Session = Depends(get_db),
+):
+    return requirement_analysis_service.patch_by_scheme_id(session, scheme_pk, obj_in)
+
 
 @router.delete("/requirement_analysis/{pk}", tags=["requirement_analysis"])
 def delete(pk: int, session: Session = Depends(get_db)):
     return requirement_analysis_service.delete(session, pk)
+
+
+@router.delete(
+    "/scheme/requirement_analysis/{scheme_pk}", tags=["scheme_requirement_analysis"]
+)
+def delete_by_scheme_id(scheme_pk: int, session: Session = Depends(get_db)):
+    return requirement_analysis_service.delete_by_scheme_id(session, scheme_pk)
 
 
 ##----------------------------------------requirement_analysis_detail------------------------------------------------------------
@@ -257,9 +276,9 @@ def get_by_id(pk: int, session: Session = Depends(get_db)):
     return system_framework_service.get_by_id(session, pk)
 
 @router.get(
-    "/system_framework/{scheme_pk}",
+    "/scheme/system_framework/{scheme_pk}",
     response_model=SystemFrameworkSchemas,
-    tags=["system_framework"],
+    tags=["scheme_system_framework"],
 )
 def get_by_scheme_id(scheme_pk: int, session: Session = Depends(get_db)):
     return system_framework_service.get_by_scheme_id(session, scheme_pk)
@@ -286,12 +305,27 @@ def patch(pk: int, obj_in: UpdateSystemFramework, session: Session = Depends(get
     return system_framework_service.patch(session, pk, obj_in)
 
 
+@router.patch(
+    "/scheme/system_framework/{scheme_pk}",
+    response_model=SystemFrameworkSchemas,
+    tags=["scheme_system_framework"],
+)
+def patch_by_scheme_id(
+    scheme_pk: int, obj_in: UpdateSystemFramework, session: Session = Depends(get_db)
+):
+    return system_framework_service.patch_by_scheme_id(session, scheme_pk, obj_in)
+
 @router.delete("/system_framework/{pk}", tags=["system_framework"])
 def delete(pk: int, session: Session = Depends(get_db)):
     return system_framework_service.delete(session, pk)
 
 
-# ----------------------------------------system_framework-----------------------------
+@router.delete("/scheme/system_framework/{scheme_id}", tags=["scheme_system_framework"])
+def delete_by_scheme_id(scheme_id: int, session: Session = Depends(get_db)):
+    return system_framework_service.delete_by_scheme_id(session, scheme_id)
+
+
+# ----------------------------------------system_framework_detail-----------------------------
 system_framework_detail_service = SystemFrameworkDetailService()
 @router.get('/system_framework_detail', tags=['system_framework_detail'])
 def get(
@@ -353,9 +387,9 @@ def get_by_id(pk: int, session: Session = Depends(get_db)):
 
 
 @router.get(
-    "/response_indicator/{scheme_pk}",
+    "/scheme/response_indicator/{scheme_pk}",
     response_model=ResponseIndicatorSchemas,
-    tags=["response_indicator"],
+    tags=["scheme_response_indicator"],
 )
 def get_by_scheme_id(scheme_pk: int, session: Session = Depends(get_db)):
     return response_indicator_service.get_by_scheme_id(session, scheme_pk)
@@ -382,9 +416,27 @@ def patch(pk: int, obj_in: UpdateResponseIndicator, session: Session = Depends(g
     return response_indicator_service.patch(session, pk, obj_in)
 
 
+@router.patch(
+    "/scheme/response_indicator/{scheme_pk}",
+    response_model=ResponseIndicatorSchemas,
+    tags=["scheme_response_indicator"],
+)
+def patch_by_scheme_id(
+    scheme_pk: int, obj_in: UpdateResponseIndicator, session: Session = Depends(get_db)
+):
+    return response_indicator_service.patch_by_scheme_id(session, scheme_pk, obj_in)
+
+
 @router.delete("/response_indicator/{pk}", tags=["response_indicator"])
 def delete(pk: int, session: Session = Depends(get_db)):
     return response_indicator_service.delete(session, pk)
+
+
+@router.delete(
+    "/scheme/response_indicator/{scheme_pk}", tags=["scheme_response_indicator"]
+)
+def delete_by_scheme_id(scheme_pk: int, session: Session = Depends(get_db)):
+    return response_indicator_service.delete_by_scheme_id(session, scheme_pk)
 
 
 ##----------------------------------------Response_indicator_detail--------------------------------

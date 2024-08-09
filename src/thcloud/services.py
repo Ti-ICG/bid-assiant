@@ -65,9 +65,19 @@ class BaseService(Generic[ModelType, CreateSchema, UpdateSchema]):
         """Update"""
         return self.dao.patch(session, pk, obj_in)
 
+    def patch_by_scheme_id(
+        self, session: Session, pk: int, obj_in: UpdateSchema
+    ) -> ModelType:
+        """Update"""
+        return self.dao.patch_by_scheme_id(session, pk, obj_in)
+
     def delete(self, session: Session, pk: int) -> None:
         """Delete a object"""
         return self.dao.delete(session, pk)
+
+    def delete_by_scheme_id(self, session: Session, pk: int) -> None:
+        """Delete a object"""
+        return self.dao.delete_by_scheme_id(session, pk)
 
 
 class SchemeService(BaseService[Scheme, CreateSchema, UpdateSchema]):

@@ -495,6 +495,15 @@ def get_all_by_id(pk: int, session: Session = Depends(get_db)):
         i.children = (
             session.query(Bid_catalog).filter(Bid_catalog.parent_id == i.id).all()
         )
+        content_result = (
+            session.query(Bid_catalog_content)
+            .filter(Bid_catalog_content.catalog_id == i.id)
+            .first()
+        )
+        if content_result is not None:
+            i.content = content_result.content
+        else:
+            i.content = ""
     data = []
     for i in result:
         if i.level == 1:
@@ -536,7 +545,7 @@ def delete(pk: str, session: Session = Depends(get_db)):
 bid_catalog_content_service = BidCatalogContentService()
 
 
-@router.get("/bid_catalog_content", tags=["bid_catalog_content"])
+@router.get("/bid_catalog/content", tags=["bid_catalog"])
 def get(session: Session = Depends(get_db), commons: CommonQueryParams = Depends()):
     return bid_catalog_content_service.get(
         session, offset=commons.offset, limit=commons.limit
@@ -544,18 +553,21 @@ def get(session: Session = Depends(get_db), commons: CommonQueryParams = Depends
 
 
 @router.get(
-    "/bid_catalog_content/{pk}",
+    "/bid_catalog/content/{catalog_id}&{scheme_id}",
     response_model=BidCatalogContentSchemas,
-    tags=["bid_catalog_content"],
+    tags=["bid_catalog"],
 )
-def get_by_id(pk: int, session: Session = Depends(get_db)):
-    return bid_catalog_content_service.get_by_id(session, pk)
+def get_by_id(catalog_id: int, scheme_id: int, session: Session = Depends(get_db)):
+    # bid_catalog_content_service.get_by_id(session, pk)
+    return bid_catalog_content_service.get_catalog_content(
+        session, catalog_id, scheme_id
+    )
 
 
 @router.post(
-    "/bid_catalog_content",
+    "/bid_catalog/content",
     response_model=BidCatalogContentSchemas,
-    tags=["bid_catalog_content"],
+    tags=["bid_catalog"],
 )
 def create(
     obj_in: CreateBidCatalogContent,
@@ -565,17 +577,26 @@ def create(
 
 
 @router.patch(
-    "/bid_catalog_content/{pk}",
+    "/bid_catalog/content/{catalog_id}&{scheme_id}",
     response_model=BidCatalogContentSchemas,
-    tags=["bid_catalog_content"],
+    tags=["bid_catalog"],
 )
-def patch(pk: int, obj_in: UpdateBidCatalogContent, session: Session = Depends(get_db)):
-    return bid_catalog_content_service.patch(session, pk, obj_in)
+def patch(
+    catalog_id: int,
+    scheme_id: int,
+    obj_in: UpdateBidCatalogContent,
+    session: Session = Depends(get_db),
+):
+    return bid_catalog_content_service.patch_catalog_content(
+        session, catalog_id, scheme_id, obj_in
+    )
 
 
-@router.delete("/bid_catalog_content/{pk}", tags=["bid_catalog_content"])
-def delete(pk: int, session: Session = Depends(get_db)):
-    return bid_catalog_content_service.delete(session, pk)
+@router.delete("/bid_catalog/content/{catalog_id}&{scheme_id}", tags=["bid_catalog"])
+def delete(catalog_id: int, scheme_id: int, session: Session = Depends(get_db)):
+    return bid_catalog_content_service.delete_catalog_content(
+        session, catalog_id, scheme_id
+    )
 
 
 # ----------------------------------------Catalog_prompt-----------------

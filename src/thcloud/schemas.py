@@ -231,21 +231,25 @@ class UpdateBidCatalog(BaseBidCatalog):
 
 #  Bid_catalog_content
 class BaseBidCatalogContent(BaseModel):
-    catalog_id: str
-    content: str
+    pass
 
 
 class BidCatalogContentSchemas(BaseBidCatalogContent, InDBMixin):
+    catalog_id: str
+    scheme_id: int
+    content: str
     create_time: datetime
     update_time: datetime
 
 
 class CreateBidCatalogContent(BaseBidCatalogContent):
-    pass
+    catalog_id: str
+    scheme_id: int
+    content: str
 
 
 class UpdateBidCatalogContent(BaseBidCatalogContent):
-    pass
+    content: str
 
 
 #  Catalog_prompt

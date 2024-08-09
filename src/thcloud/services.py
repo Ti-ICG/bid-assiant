@@ -47,6 +47,12 @@ class BaseService(Generic[ModelType, CreateSchema, UpdateSchema]):
         """"""
         return self.dao.get_by_scheme_id(session, pk)
 
+    def get_catalog_content(
+        self, session: Session, cpk: int, spk: int
+    ) -> List[ModelType]:
+        """"""
+        return self.dao.get_catalog_content(session, cpk, spk)
+
     def get_detail(self, session: Session, pk: int) -> ModelType:
         return self.dao.get_detail(session, pk)
 
@@ -71,6 +77,12 @@ class BaseService(Generic[ModelType, CreateSchema, UpdateSchema]):
         """Update"""
         return self.dao.patch_by_scheme_id(session, pk, obj_in)
 
+    def patch_catalog_content(
+        self, session: Session, cpk: int, spk: int, obj_in: UpdateSchema
+    ) -> ModelType:
+        """Update"""
+        return self.dao.patch_catalog_content(session, cpk, spk, obj_in)
+
     def delete(self, session: Session, pk: int) -> None:
         """Delete a object"""
         return self.dao.delete(session, pk)
@@ -78,6 +90,10 @@ class BaseService(Generic[ModelType, CreateSchema, UpdateSchema]):
     def delete_by_scheme_id(self, session: Session, pk: int) -> None:
         """Delete a object"""
         return self.dao.delete_by_scheme_id(session, pk)
+
+    def delete_catalog_content(self, session: Session, cpk: int, spk: int) -> None:
+        """Delete a object"""
+        return self.dao.delete_catalog_content(session, cpk, spk)
 
 
 class SchemeService(BaseService[Scheme, CreateSchema, UpdateSchema]):

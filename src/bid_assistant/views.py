@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 
@@ -41,7 +42,7 @@ from thcloud.schemas import (
     UpdateScheme,
     UpdateSystemFramework,
     UpdateSystemFrameworkDetail,
-    Chat,
+    Chat, CatalogPromptSchemas, CreateCatalogPrompt, UpdateCatalogPrompt,
 )
 from thcloud.services import (
     BidCatalogContentService,
@@ -52,7 +53,7 @@ from thcloud.services import (
     ResponseIndicatorService,
     SchemeService,
     SystemFrameworkDetailService,
-    SystemFrameworkService,
+    SystemFrameworkService, CatalogPromptService,
 )
 
 router = APIRouter()
@@ -682,53 +683,87 @@ async def kb_upload_docs(kb_name: str, docs_path: str):
         raise HTTPException(status_code=500, detail="Create knowledge base failed.")
 
 
-@router.post("/chat", tags=["chat"])
-async def chat(req: Chat, session: Session = Depends(get_db)):
-    prompt = session.query(Catalog_prompt).filter_by(name=req.title).all()
-    if prompt is None:
+@router.post("/ai", tags=["ai"])
+async def ai(req: Chat, session: Session = Depends(get_db)):
+    actions = session.query(Catalog_prompt).filter_by(title=req.title).order_by(Catalog_prompt.sequence).all()
+    if actions is None:
         raise HTTPException(status_code=500, detail="Param query error.")
-    data = {
-        "query": prompt.prompt_content,
-        "mode": "local_kb",
-        "kb_name": get_kb_name(req.scheme_id),
-        "top_k": 3,
-        "score_threshold": 1.79,
-        "history": [],
-        "stream": True,
-        "model": "glm-4-9b-chat-1m",
-        "temperature": 0.7,
-        "max_tokens": 30000,
-        "prompt_name": "default",
-        "return_direct": False
-    }
-
-    async def generate():
-        async with httpx.AsyncClient() as client:
-            async with client.stream("POST", KB_CHAT_API, json=data) as stream:
-                async for chunk in stream.aiter_text():
-                    yield chunk
-    return StreamingResponse(generate(), media_type="text/event-stream")
+    previous = ""
+    for index, action in enumerate(actions):
+        if index == len(actions) - 1:
+            data = generate_data(req, action, True, previous)
+            return stream_chat(action, data)
+        else:
+            data = generate_data(req, action, False, previous)
+            previous = direct_chat(action, data)
 
 
-async def chat_chat():
-    data = {
-        "messages": [
-            {
-                "content": "你是谁",
-                "role": "system",
-                "name": "string",
-            }
-        ],
-        "model": "glm-4-9b-chat-1m",
-        "max_tokens": 2048,
-        "n": 0,
-        "stream": True,
-        "temperature": 0.7,
-    }
+def generate_data(chat: Chat, action: Catalog_prompt, stream: bool, previous: str) -> dict:
+    data = {}
+    if action.type == "RAG":
+        data = {
+            "query": action.prompt,
+            "mode": "local_kb",
+            "kb_name": get_kb_name(chat.scheme_id),
+            "top_k": 3,
+            "score_threshold": 1.79,
+            "history": [],
+            "stream": stream,
+            "model": "glm-4-9b-chat-1m",
+            "temperature": 0.7,
+            "max_tokens": 30000,
+            "prompt_name": "default",
+            "return_direct": False
+        }
+    elif action.type == "CTCT":
+        data = {
+            "messages": [
+                {
+                    "content": action.prompt,
+                    "role": "system",
+                    "name": "string",
+                }
+            ],
+            "model": "glm-4-9b-chat-1m",
+            "max_tokens": 2048,
+            "n": 0,
+            "stream": stream,
+            "temperature": 0.7,
+        }
+    return data
 
-    async def generate():
-        async with httpx.AsyncClient() as client:
-            async with client.stream("POST", CHAT_CHAT_API, json=data) as stream:
-                async for chunk in stream.aiter_text():
-                    yield chunk
-    return StreamingResponse(generate(), media_type="text/event-stream")
+
+def stream_chat(action: Catalog_prompt, data: dict) -> StreamingResponse:
+    if action.type == "RAG":
+        async def generate():
+            async with httpx.AsyncClient() as client:
+                async with client.stream("POST", KB_CHAT_API, json=data) as stream:
+                    async for chunk in stream.aiter_text():
+                        yield chunk
+        return StreamingResponse(generate(), media_type="text/event-stream")
+
+    elif action.type == "CTCT":
+        async def generate():
+            async with httpx.AsyncClient() as client:
+                async with client.stream("POST", CHAT_CHAT_API, json=data) as stream:
+                    async for chunk in stream.aiter_text():
+                        yield chunk
+        return StreamingResponse(generate(), media_type="text/event-stream")
+
+
+def direct_chat(action: Catalog_prompt, data: dict) -> str:
+    if action.type == "DB":
+        return action.db_content
+
+    elif action.type == "RAG":
+        with httpx.Client() as client:
+            response = client.post(KB_CHAT_API, json=data)
+            if response.status_code == 200:
+                print(response.json())
+
+    elif action.type == "CTCT":
+        with httpx.Client() as client:
+            response = client.post(CHAT_CHAT_API, json=data)
+            if response.status_code == 200:
+                print(response.json())
+

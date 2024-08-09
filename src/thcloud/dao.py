@@ -86,6 +86,7 @@ class BaseDAO(Generic[ModelType, CreateSchema, UpdateSchema]):
             requirement_id = requirement_content[0]
             requirement_content = requirement_content[1]
         else:
+            requirement_id = 0
             requirement_content = ""
         framework_content = session.execute(
             text(
@@ -97,6 +98,7 @@ class BaseDAO(Generic[ModelType, CreateSchema, UpdateSchema]):
             framework_id = framework_content[0]
             framework_content = framework_content[1]
         else:
+            framework_id = 0
             framework_content = ""
         indicator_content = session.execute(
             text(
@@ -108,6 +110,7 @@ class BaseDAO(Generic[ModelType, CreateSchema, UpdateSchema]):
             indicator_id = indicator_content[0]
             indicator_content = indicator_content[1]
         else:
+            indicator_id = 0
             indicator_content = ""
         file_url = session.query(self.model).get(pk)
         if file_url is not None:

@@ -576,6 +576,53 @@ def patch(pk: int, obj_in: UpdateBidCatalogContent, session: Session = Depends(g
 def delete(pk: int, session: Session = Depends(get_db)):
     return bid_catalog_content_service.delete(session, pk)
 
+
+# ----------------------------------------Catalog_prompt-----------------
+catalog_prompt_Service = CatalogPromptService()
+
+
+@router.get("/catalog_prompt", tags=["catalog_prompt"])
+def get(session: Session = Depends(get_db), commons: CommonQueryParams = Depends()):
+    return catalog_prompt_Service.get(
+        session, offset=commons.offset, limit=commons.limit
+    )
+
+
+@router.get(
+    "/catalog_prompt/{pk}",
+    response_model=CatalogPromptSchemas,
+    tags=["catalog_prompt"],
+)
+def get_by_id(pk: int, session: Session = Depends(get_db)):
+    return catalog_prompt_Service.get_by_id(session, pk)
+
+
+@router.post(
+    "/catalog_prompt",
+    response_model=CatalogPromptSchemas,
+    tags=["catalog_prompt"],
+)
+def create(
+    obj_in: CreateCatalogPrompt,
+    session: Session = Depends(get_db),
+):
+    return catalog_prompt_Service.create(session, obj_in)
+
+
+@router.patch(
+    "/catalog_prompt/{pk}",
+    response_model=CatalogPromptSchemas,
+    tags=["catalog_prompt"],
+)
+def patch(pk: int, obj_in: UpdateCatalogPrompt, session: Session = Depends(get_db)):
+    return catalog_prompt_Service.patch(session, pk, obj_in)
+
+
+@router.delete("/catalog_prompt/{pk}", tags=["catalog_prompt"])
+def delete(pk: int, session: Session = Depends(get_db)):
+    return catalog_prompt_Service.delete(session, pk)
+
+
 # ----------------------------------------Chat-----------------
 CHAT_HOST = "http://192.168.200.17:7861"
 KB_CREATE_API = CHAT_HOST + "/knowledge_base/create_knowledge_base"

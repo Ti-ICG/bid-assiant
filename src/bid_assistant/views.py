@@ -495,6 +495,15 @@ def get_all_by_id(pk: int, session: Session = Depends(get_db)):
         i.children = (
             session.query(Bid_catalog).filter(Bid_catalog.parent_id == i.id).all()
         )
+        content_result = (
+            session.query(Bid_catalog_content)
+            .filter(Bid_catalog_content.catalog_id == i.id)
+            .first()
+        )
+        if content_result is not None:
+            i.content = content_result.content
+        else:
+            i.content = ""
     data = []
     for i in result:
         if i.level == 1:

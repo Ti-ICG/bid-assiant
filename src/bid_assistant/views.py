@@ -732,9 +732,13 @@ def chat_prompt(chat: Chat, action: Catalog_prompt, previous: str, session: Sess
         prompt = prompt.replace("{previous}", previous)
     if "{tech_analyze}" in prompt:
         requirement_analysis = requirement_analysis_service.get_by_id(session, chat.scheme_id)
+        if requirement_analysis is None:
+            raise HTTPException(status_code=500, detail="Prompt process error.")
         prompt = prompt.replace("{tech_analyze}", requirement_analysis.requirement_content)
     if "{系统接口方案}" in prompt:
         catalog_content = session.query(Bid_catalog_content).filter_by(catalog_id="14", scheme_id=chat.scheme_id).first()
+        if catalog_content is None:
+            raise HTTPException(status_code=500, detail="Prompt process error.")
         prompt = prompt.replace("{系统接口方案}", catalog_content.content)
     return prompt
 

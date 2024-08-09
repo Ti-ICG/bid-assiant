@@ -20,5 +20,3 @@ settings = Dynaconf(
     includes=[os.path.join(sys.prefix, 'etc', 'thcloud', 'settings.yml')],  # 自定义配置覆盖默认配置
     base_dir=_BASE_DIR,  # 编码传入配置
 )
-
-prompts = Dynaconf(settings_files=[Path(__file__).parent / "prompts.yml"])

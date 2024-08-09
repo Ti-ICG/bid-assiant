@@ -265,10 +265,6 @@ class UpdateCatalogPrompt(BaseCatalogPrompt):
 
 
 #  Chat
-class KbChat(BaseModel):
+class Chat(BaseModel):
     scheme_id: int
-    query: str
-
-
-class ChatChat(BaseModel):
-    content: str
+    title: str

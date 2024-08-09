@@ -7,10 +7,10 @@ from sqlalchemy.orm import Session
 from starlette.responses import StreamingResponse
 
 from preprocessing_docx import preprocessing_lib
-from thcloud.config import settings, prompts
+from thcloud.config import settings
 from thcloud.dependencies import CommonQueryParams, get_db
 from thcloud.minio_db import bucket
-from thcloud.models import Bid_catalog
+from thcloud.models import Bid_catalog, Catalog_prompt
 from thcloud.schemas import (
     BidCatalogContentSchemas,
     BidCatalogSchemas,
@@ -41,8 +41,7 @@ from thcloud.schemas import (
     UpdateScheme,
     UpdateSystemFramework,
     UpdateSystemFrameworkDetail,
-    KbChat,
-    ChatChat,
+    Chat,
 )
 from thcloud.services import (
     BidCatalogContentService,
@@ -571,7 +570,6 @@ async def kb_upload_docs(kb_name: str, docs_path: str):
 
             if files_to_upload:
                 response = await client.post(KB_UPLOAD_DOCS_API, data=data, files=files_to_upload)
-                print(response.json())
                 for _, file in files_to_upload:
                     file.close()
 
@@ -585,13 +583,13 @@ async def kb_upload_docs(kb_name: str, docs_path: str):
         raise HTTPException(status_code=500, detail="Create knowledge base failed.")
 
 
-@router.post("/chat/kb-chat", tags=["chat"])
-async def kb_chat(req: KbChat):
-    prompt = prompts.kb_chat.get(req.query)
+@router.post("/chat", tags=["chat"])
+async def chat(req: Chat, session: Session = Depends(get_db)):
+    prompt = session.query(Catalog_prompt).filter_by(name=req.title).all()
     if prompt is None:
         raise HTTPException(status_code=500, detail="Param query error.")
     data = {
-        "query": prompt,
+        "query": prompt.prompt_content,
         "mode": "local_kb",
         "kb_name": get_kb_name(req.scheme_id),
         "top_k": 3,
@@ -613,8 +611,7 @@ async def kb_chat(req: KbChat):
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 
-@router.post("/chat/chat", tags=["chat"])
-async def chat_chat(req: ChatChat):
+async def chat_chat():
     data = {
         "messages": [
             {

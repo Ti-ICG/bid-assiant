@@ -11,7 +11,7 @@ from preprocessing_docx import preprocessing_lib
 from thcloud.config import settings
 from thcloud.dependencies import CommonQueryParams, get_db
 from thcloud.minio_db import bucket
-from thcloud.models import Bid_catalog, Catalog_prompt
+from thcloud.models import Bid_catalog, Catalog_prompt, Bid_catalog_content
 from thcloud.schemas import (
     BidCatalogContentSchemas,
     BidCatalogSchemas,
